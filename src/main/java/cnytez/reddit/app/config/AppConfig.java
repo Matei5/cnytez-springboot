@@ -1,4 +1,4 @@
-package cnytez.reddit.demo.config;
+package cnytez.reddit.app.config;
 
 import org.springframework.context.annotation.Configuration;
 

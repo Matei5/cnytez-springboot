@@ -1,4 +1,4 @@
-package cnytez.reddit.demo.model;
+package cnytez.reddit.app.model;
 
 import jakarta.persistence.*;
 import lombok.*;

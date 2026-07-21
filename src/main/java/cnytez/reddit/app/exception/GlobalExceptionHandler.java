@@ -1,4 +1,4 @@
-package cnytez.reddit.demo.exception;
+package cnytez.reddit.app.exception;
 
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 

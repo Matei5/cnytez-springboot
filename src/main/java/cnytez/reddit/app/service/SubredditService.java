@@ -1,4 +1,4 @@
-package cnytez.reddit.demo.service;
+package cnytez.reddit.app.service;
 
 import 
 lombok.RequiredArgsConstructor;
