@@ -3,6 +3,7 @@ package cnytez.reddit.app.service;
 import cnytez.reddit.app.dto.CommentDto;
 import cnytez.reddit.app.dto.CreateCommentRequest;
 import cnytez.reddit.app.dto.VoteRequest;
+import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.model.*;
 import cnytez.reddit.app.repository.CommentRepository;
@@ -67,7 +68,9 @@ public class CommentService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Parent comment not found with id: " + request.parentCommentId()));
             // Ensure parent comment belongs to the same post
-
+            if (!parentComment.getPost().getId().equals(request.postId())) {
+                throw new BadRequestException("Parent comment does not belong to the specified post.");
+            }
         }
 
         Comment comment = Comment.builder()
@@ -94,10 +97,10 @@ public class CommentService {
         if (existingVote.isPresent()) {
             CommentVote vote = existingVote.get();
             if (vote.getVoteType() == request.voteType()) {
-                // Same vote â€“ remove it (toggle off)
+                // Same vote = remove it (toggle off)
                 commentVoteRepository.delete(vote);
             } else {
-                // Different vote â€“ switch it
+                // Different vote = switch it
                 vote.setVoteType(request.voteType());
                 commentVoteRepository.save(vote);
             }
@@ -116,7 +119,9 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long commentId, Long requestingUserId) {
         Comment comment = findCommentById(commentId);
-
+        if (!comment.getOwner().getId().equals(requestingUserId)) {
+            throw new BadRequestException("Only the comment author can delete this comment.");
+        }
         commentRepository.deleteById(commentId);
     }
 
