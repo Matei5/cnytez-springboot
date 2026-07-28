@@ -1,4 +1,4 @@
 package cnytez.reddit.app.dto;
 
-public class SubredditDto {
+public record SubredditDto() {
 }

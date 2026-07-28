@@ -1,4 +1,8 @@
 package cnytez.reddit.app.dto;
 
-public class VoteRequest {
-}
+import cnytez.reddit.app.model.VoteType;
+
+public record VoteRequest(
+        Long userId,
+        VoteType voteType
+) {}
