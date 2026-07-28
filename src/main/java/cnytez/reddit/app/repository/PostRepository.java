@@ -14,4 +14,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findBySubreddit(Subreddit subreddit);
 
     List<Post> findByOwner(User owner);
+
+    List<Post> findBySubredditOrderByCreationDateDesc(Subreddit subreddit);
+
+    List<Post> findAllByOrderByCreationDateDesc();
+
 }
