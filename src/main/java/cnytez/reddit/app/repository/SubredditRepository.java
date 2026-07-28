@@ -15,7 +15,5 @@ public interface SubredditRepository extends JpaRepository<Subreddit, Long> {
 
     boolean existsByName(String name);
 
-    List<Post> findBySubredditOrderByCreationDateDesc(Subreddit subreddit);
-
     List<Post> findAllByOrderByCreationDateDesc();
 }
