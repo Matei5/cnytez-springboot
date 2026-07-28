@@ -3,6 +3,7 @@ package cnytez.reddit.app.service;
 import cnytez.reddit.app.dto.LoginRequest;
 import cnytez.reddit.app.dto.RegisterRequest;
 import cnytez.reddit.app.dto.UserDto;
+import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.UnauthorizedException;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.UserRepository;
@@ -18,6 +19,12 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public UserDto register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.username())) {
+            throw new BadRequestException("Username '" + request.username() + "' is already taken.");
+        }
+        if (userRepository.existsByEmail(request.email())) {
+            throw new BadRequestException("Email '" + request.email() + "' is already registered.");
+        }
 
         User user = User.builder()
                 .name(request.name())
@@ -34,6 +41,10 @@ public class AuthService {
     public UserDto login(LoginRequest request) {
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new UnauthorizedException("Invalid username or password."));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new UnauthorizedException("Invalid username or password.");
+        }
 
         return toDto(user);
     }
