@@ -12,6 +12,7 @@ public record PostDto(
         String subredditName,
         int score,
         int upvotes,
-        int downvotes
+        int downvotes,
+        int commentCount
 ) {
 }

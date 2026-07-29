@@ -7,6 +7,7 @@ import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.*;
+import cnytez.reddit.app.repository.CommentRepository;
 import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.PostVoteRepository;
 import cnytez.reddit.app.repository.SubredditRepository;
@@ -27,6 +28,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final SubredditRepository subredditRepository;
     private final LogManager logManager;
@@ -136,6 +138,7 @@ public class PostService {
     private PostDto toDto(Post post) {
         long upvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);
         long downvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
+        long commentCount = commentRepository.countByPost(post);
         return new PostDto(
                 post.getId(),
                 post.getTitle(),
@@ -148,7 +151,8 @@ public class PostService {
                 post.getSubreddit().getName(),
                 (int) (upvotes - downvotes),
                 (int) upvotes,
-                (int) downvotes
+                (int) downvotes,
+                (int) commentCount
         );
     }
 }

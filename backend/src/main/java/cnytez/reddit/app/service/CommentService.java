@@ -151,6 +151,7 @@ public class CommentService {
     private CommentDto toDto(Comment comment) {
         long upvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.UPVOTE);
         long downvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
+        long replyCount = commentRepository.countByParentComment(comment);
         return new CommentDto(
                 comment.getId(),
                 comment.getTitle(),
@@ -163,7 +164,8 @@ public class CommentService {
                 comment.getParentComment() != null ? comment.getParentComment().getId() : null,
                 (int) (upvotes - downvotes),
                 (int) upvotes,
-                (int) downvotes
+                (int) downvotes,
+                (int) replyCount
         );
     }
 }
