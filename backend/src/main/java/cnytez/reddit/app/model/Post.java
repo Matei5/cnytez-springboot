@@ -28,6 +28,8 @@ public class Post {
     @Column(nullable = false)
     private LocalDateTime creationDate;
 
+    private LocalDateTime deletionDate;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     @ToString.Exclude

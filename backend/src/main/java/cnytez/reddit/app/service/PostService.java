@@ -61,7 +61,7 @@ public class PostService {
 
     @Transactional
     public PostDto createPost(CreatePostRequest request) {
-        User owner = userRepository.findById(request.ownerId())
+        User owner = userRepository.findByIdAndDeletionDateIsNull(request.ownerId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.ownerId()));
         Subreddit subreddit = subredditRepository.findById(request.subredditId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + request.subredditId()));
@@ -91,7 +91,7 @@ public class PostService {
     @Transactional
     public PostDto vote(Long postId, VoteRequest request) {
         Post post = findPostById(postId);
-        User user = userRepository.findById(request.userId())
+        User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
 
         Optional<PostVote> existingVote = postVoteRepository.findByUserAndPost(user, post);
@@ -123,10 +123,22 @@ public class PostService {
     @Transactional
     public void deletePost(Long postId, Long requestingUserId) {
         Post post = findPostById(postId);
-        if (!post.getOwner().getId().equals(requestingUserId)) {
+        User owner = post.getOwner();
+
+        if (owner.getDeletionDate() != null) {
             throw new BadRequestException("Only the post author can delete this post.");
         }
-        postRepository.deleteById(postId);
+        if (!owner.getId().equals(requestingUserId)) {
+            throw new BadRequestException("Only the post author can delete this post.");
+        }
+
+        post.setTitle("[deleted by user]");
+        post.setText(null);
+        post.setImage(null);
+
+        post.setDeletionDate(LocalDateTime.now());
+
+        postRepository.save(post);
         logManager.log("Delete post success! User with id " + requestingUserId + " deleted post with id " + postId);
     }
 
