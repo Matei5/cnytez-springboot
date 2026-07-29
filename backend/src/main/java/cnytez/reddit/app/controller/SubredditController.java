@@ -54,12 +54,4 @@ public class SubredditController {
                                                        @RequestParam Long userId) {
         return ResponseEntity.ok(subredditService.leaveSubreddit(id, userId));
     }
-
-    // DELETE /api/subreddits/{id}?requestingUserId={userId}
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSubreddit(@PathVariable Long id,
-                                                @RequestParam Long requestingUserId) {
-        subredditService.deleteSubreddit(id, requestingUserId);
-        return ResponseEntity.noContent().build();
-    }
 }

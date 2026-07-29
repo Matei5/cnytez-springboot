@@ -19,7 +19,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public UserDto register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
+        if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
             throw new BadRequestException("Username '" + request.username() + "' is already taken.");
         }
         if (userRepository.existsByEmail(request.email())) {
@@ -39,7 +39,7 @@ public class AuthService {
     }
 
     public UserDto login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.username())
+        User user = userRepository.findByUsernameAndDeletionDateIsNull(request.username())
                 .orElseThrow(() -> new UnauthorizedException("Invalid username or password."));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
@@ -50,7 +50,15 @@ public class AuthService {
     }
 
     private UserDto toDto(User user) {
-        return new UserDto(user.getId(), user.getName(), user.getUsername(),
+        String name = null;
+
+        if (user.getDeletionDate() != null) {
+            name = "[deleted]";
+        } else {
+            name = user.getName();
+        }
+
+        return new UserDto(user.getId(), name, user.getUsername(),
                 user.getEmail(), user.getProfilePhoto());
     }
 }

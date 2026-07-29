@@ -5,11 +5,13 @@ import cnytez.reddit.app.dto.UserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.model.User;
+import cnytez.reddit.app.repository.SubredditRepository;
 import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -17,28 +19,31 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final SubredditRepository subredditRepository;
 
     public List<UserDto> getAllUsers() {
-        return userRepository.findAll().stream()
+        return userRepository.findAllByDeletionDateIsNull().stream()
                 .map(this::toDto)
                 .toList();
     }
 
     public UserDto getUserById(Long id) {
-        return toDto(findUserById(id));
+        return toDto(userRepository.findByIdAndDeletionDateIsNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)));
     }
 
     public UserDto getUserByUsername(String username) {
-        return toDto(userRepository.findByUsername(username)
+        return toDto(userRepository.findByUsernameAndDeletionDateIsNull(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username)));
     }
 
     @Transactional
     public UserDto updateProfile(Long id, UpdateProfileRequest request) {
-        User user = findUserById(id);
+        User user = userRepository.findByIdAndDeletionDateIsNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         if (request.username() != null && !request.username().equals(user.getUsername())) {
-            if (userRepository.existsByUsername(request.username())) {
+            if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
                 throw new BadRequestException("Username '" + request.username() + "' is already taken.");
             }
             user.setUsername(request.username());
@@ -55,20 +60,34 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User not found with id: " + id);
-        }
-        userRepository.deleteById(id);
-    }
-
-    // Package-accessible helper used by other services
-    User findUserById(Long id) {
-        return userRepository.findById(id)
+        User user = userRepository.findByIdAndDeletionDateIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        if (!subredditRepository.findByOwnerId(id).isEmpty()) {
+            throw new BadRequestException("User is owner of one or more subreddits");
+        }
+
+        user.setName(null);
+        user.setUsername("[deleted_" + user.getId() + "]");
+        user.setEmail(null);
+        user.setPassword(null);
+        user.setProfilePhoto(null);
+
+        user.setDeletionDate(LocalDateTime.now());
+
+        userRepository.save(user);
     }
 
     private UserDto toDto(User user) {
-        return new UserDto(user.getId(), user.getName(), user.getUsername(),
+        String name = null;
+
+        if (user.getDeletionDate() != null) {
+            name = "[deleted]";
+        } else {
+            name = user.getName();
+        }
+
+        return new UserDto(user.getId(), name, user.getUsername(),
                 user.getEmail(), user.getProfilePhoto());
     }
 }

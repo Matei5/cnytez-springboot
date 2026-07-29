@@ -57,7 +57,7 @@ public class CommentService {
 
     @Transactional
     public CommentDto createComment(CreateCommentRequest request) {
-        User owner = userRepository.findById(request.ownerId())
+        User owner = userRepository.findByIdAndDeletionDateIsNull(request.ownerId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.ownerId()));
         Post post = postRepository.findById(request.postId())
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + request.postId()));
@@ -98,7 +98,7 @@ public class CommentService {
     @Transactional
     public CommentDto vote(Long commentId, VoteRequest request) {
         Comment comment = findCommentById(commentId);
-        User user = userRepository.findById(request.userId())
+        User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
 
         Optional<CommentVote> existingVote = commentVoteRepository.findByUserAndComment(user, comment);
@@ -128,10 +128,22 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long commentId, Long requestingUserId) {
         Comment comment = findCommentById(commentId);
-        if (!comment.getOwner().getId().equals(requestingUserId)) {
+        User owner = comment.getOwner();
+
+        if (owner.getDeletionDate() != null) {
             throw new BadRequestException("Only the comment author can delete this comment.");
         }
-        commentRepository.deleteById(commentId);
+        if (!owner.getId().equals(requestingUserId)) {
+            throw new BadRequestException("Only the comment author can delete this comment.");
+        }
+
+        comment.setTitle("[deleted by user]");
+        comment.setText(null);
+        comment.setImage(null);
+
+        comment.setDeletionDate(LocalDateTime.now());
+
+        commentRepository.save(comment);
     }
 
     private Comment findCommentById(Long id) {

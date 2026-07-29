@@ -63,7 +63,7 @@ public class SubredditService {
     @Transactional
     public SubredditDto joinSubreddit(Long subredditId, Long userId) {
         Subreddit subreddit = findSubredditById(subredditId);
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletionDateIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         subreddit.addMember(user);
@@ -73,7 +73,7 @@ public class SubredditService {
     @Transactional
     public SubredditDto leaveSubreddit(Long subredditId, Long userId) {
         Subreddit subreddit = findSubredditById(subredditId);
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletionDateIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         if (subreddit.getOwner().getId().equals(userId)) {
@@ -82,15 +82,6 @@ public class SubredditService {
 
         subreddit.removeMember(user);
         return toDto(subredditRepository.save(subreddit));
-    }
-
-    @Transactional
-    public void deleteSubreddit(Long id, Long requestingUserId) {
-        Subreddit subreddit = findSubredditById(id);
-        if (!subreddit.getOwner().getId().equals(requestingUserId)) {
-            throw new BadRequestException("Only the owner can delete a subreddit.");
-        }
-        subredditRepository.deleteById(id);
     }
 
     Subreddit findSubredditById(Long id) {

@@ -3,6 +3,8 @@ package cnytez.reddit.app.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -27,4 +29,6 @@ public class User {
     private String password;
 
     private String profilePhoto;
+
+    private LocalDateTime deletionDate;
 }
