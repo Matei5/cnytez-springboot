@@ -1,6 +1,8 @@
 package cnytez.reddit.cli.ui;
 
 import cnytez.reddit.cli.client.ApiClient;
+import cnytez.reddit.cli.dto.CommentDto;
+import cnytez.reddit.cli.dto.CreateCommentRequest;
 import cnytez.reddit.cli.dto.CreatePostRequest;
 import cnytez.reddit.cli.dto.CreateSubredditRequest;
 import cnytez.reddit.cli.dto.LoginRequest;
@@ -8,6 +10,8 @@ import cnytez.reddit.cli.dto.PostDto;
 import cnytez.reddit.cli.dto.RegisterRequest;
 import cnytez.reddit.cli.dto.SubredditDto;
 import cnytez.reddit.cli.dto.UserDto;
+import cnytez.reddit.cli.dto.VoteRequest;
+import cnytez.reddit.cli.dto.VoteType;
 import cnytez.reddit.cli.session.Session;
 
 import java.util.List;
@@ -48,6 +52,12 @@ public class Menu {
                 case "7" -> joinSubreddit();
                 case "8" -> showPosts();
                 case "9" -> createPost();
+                case "10" -> showCommentsForPost();
+                case "11" -> createComment();
+                case "12" -> showReplies();
+                case "13" -> replyToComment();
+                case "14" -> votePost();
+                case "15" -> voteComment();
                 case "0" -> running = false;
                 default -> printer.println("Invalid option");
             }
@@ -72,6 +82,12 @@ public class Menu {
         printer.println("7. Join subreddit");
         printer.println("8. Show posts");
         printer.println("9. Create post");
+        printer.println("10. Show comments for post");
+        printer.println("11. Create comment");
+        printer.println("12. Show replies");
+        printer.println("13. Reply to comment");
+        printer.println("14. Vote post");
+        printer.println("15. Vote comment");
         printer.println("0. Exit");
         printer.print("> ");
     }
@@ -336,6 +352,254 @@ public class Menu {
             );
         } catch (NumberFormatException exception) {
             printer.println("Invalid subreddit ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void showCommentsForPost() {
+        printer.print("Post ID: ");
+
+        try {
+            Long postId = Long.parseLong(reader.readLine());
+            List<CommentDto> comments = apiClient.getCommentsByPost(postId);
+
+            if (comments.isEmpty()) {
+                printer.println("No comments found.");
+                return;
+            }
+
+            for (CommentDto comment : comments) {
+                printer.println(
+                        comment.id()
+                                + " | by "
+                                + comment.ownerUsername()
+                                + " | "
+                                + comment.text()
+                                + " | score: "
+                                + comment.score()
+                );
+            }
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid post ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void createComment() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        printer.print("Title: ");
+        String title = reader.readLine();
+
+        printer.print("Text: ");
+        String text = reader.readLine();
+
+        printer.print("Image (optional): ");
+        String image = reader.readLine();
+
+        printer.print("Post ID: ");
+
+        try {
+            Long postId = Long.parseLong(reader.readLine());
+
+            if (image.isBlank()) {
+                image = null;
+            }
+
+            CreateCommentRequest request = new CreateCommentRequest(
+                    title,
+                    text,
+                    image,
+                    postId,
+                    session.getCurrentUser().id(),
+                    null
+            );
+
+            CommentDto comment = apiClient.createComment(request);
+            printer.println(
+                    "Comment created (id="
+                            + comment.id()
+                            + ", score="
+                            + comment.score()
+                            + ")"
+            );
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid post ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void showReplies() {
+        printer.print("Comment ID: ");
+
+        try {
+            Long commentId = Long.parseLong(reader.readLine());
+            List<CommentDto> replies = apiClient.getReplies(commentId);
+
+            if (replies.isEmpty()) {
+                printer.println("No replies found.");
+                return;
+            }
+
+            for (CommentDto reply : replies) {
+                printer.println(
+                        reply.id()
+                                + " | by "
+                                + reply.ownerUsername()
+                                + " | "
+                                + reply.text()
+                                + " | score: "
+                                + reply.score()
+                );
+            }
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid comment ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void replyToComment() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        printer.print("Title: ");
+        String title = reader.readLine();
+
+        printer.print("Text: ");
+        String text = reader.readLine();
+
+        printer.print("Image (optional): ");
+        String image = reader.readLine();
+
+        try {
+            printer.print("Post ID: ");
+            Long postId = Long.parseLong(reader.readLine());
+
+            printer.print("Parent comment ID: ");
+            Long parentCommentId = Long.parseLong(reader.readLine());
+
+            if (image.isBlank()) {
+                image = null;
+            }
+
+            CreateCommentRequest request = new CreateCommentRequest(
+                    title,
+                    text,
+                    image,
+                    postId,
+                    session.getCurrentUser().id(),
+                    parentCommentId
+            );
+
+            CommentDto reply = apiClient.createComment(request);
+            printer.println(
+                    "Reply created (id="
+                            + reply.id()
+                            + ", score="
+                            + reply.score()
+                            + ")"
+            );
+        } catch (NumberFormatException exception) {
+            printer.println("Post ID and comment ID must be numbers.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void votePost() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        try {
+            printer.print("Post ID: ");
+            Long postId = Long.parseLong(reader.readLine());
+
+            printer.print("Vote (U/D): ");
+            String choice = reader.readLine().toUpperCase();
+
+            VoteType voteType;
+            if (choice.equals("U")) {
+                voteType = VoteType.UPVOTE;
+            } else if (choice.equals("D")) {
+                voteType = VoteType.DOWNVOTE;
+            } else {
+                printer.println("Invalid vote. Enter U or D.");
+                return;
+            }
+
+            VoteRequest request = new VoteRequest(
+                    session.getCurrentUser().id(),
+                    voteType
+            );
+
+            PostDto post = apiClient.votePost(postId, request);
+            printer.println(
+                    "Post score: "
+                            + post.score()
+                            + " ("
+                            + post.upvotes()
+                            + " up, "
+                            + post.downvotes()
+                            + " down)"
+            );
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid post ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void voteComment() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        try {
+            printer.print("Comment ID: ");
+            Long commentId = Long.parseLong(reader.readLine());
+
+            printer.print("Vote (U/D): ");
+            String choice = reader.readLine().toUpperCase();
+
+            VoteType voteType;
+            if (choice.equals("U")) {
+                voteType = VoteType.UPVOTE;
+            } else if (choice.equals("D")) {
+                voteType = VoteType.DOWNVOTE;
+            } else {
+                printer.println("Invalid vote. Enter U or D.");
+                return;
+            }
+
+            VoteRequest request = new VoteRequest(
+                    session.getCurrentUser().id(),
+                    voteType
+            );
+
+            CommentDto comment = apiClient.voteComment(commentId, request);
+            printer.println(
+                    "Comment score: "
+                            + comment.score()
+                            + " ("
+                            + comment.upvotes()
+                            + " up, "
+                            + comment.downvotes()
+                            + " down)"
+            );
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid comment ID.");
         } catch (IllegalStateException exception) {
             printer.println("Error: " + exception.getMessage());
         }
