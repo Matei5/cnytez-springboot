@@ -2,6 +2,7 @@ package cnytez.reddit.cli;
 
 import cnytez.reddit.cli.ui.ConsolePrinter;
 import cnytez.reddit.cli.ui.ConsoleReader;
+import cnytez.reddit.cli.ui.Menu;
 
 public class Main {
 
@@ -9,9 +10,7 @@ public class Main {
         ConsoleReader reader = new ConsoleReader();
         ConsolePrinter printer = new ConsolePrinter();
 
-        printer.print("Cum te cheama?");
-        String name = reader.readLine();
-
-        printer.println("Salut, " + name + "!");
+        Menu menu = new Menu(reader, printer);
+        menu.start();
     }
 }
