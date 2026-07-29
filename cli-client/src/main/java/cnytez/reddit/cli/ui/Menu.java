@@ -35,83 +35,159 @@ public class Menu {
         this.session = session;
     }
 
-    public void start()  {
+    public void start() {
         boolean running = true;
 
         while (running) {
-            printOptions();
+            printMainMenu();
             String option = reader.readLine();
 
             switch (option) {
-                case "1" -> showUsers();
-                case "2" -> register();
-                case "3" -> login();
-                case "4" -> logout();
-                case "5" -> showSubreddits();
-                case "6" -> createSubreddit();
-                case "7" -> joinSubreddit();
-                case "8" -> showPosts();
-                case "9" -> createPost();
-                case "10" -> showCommentsForPost();
-                case "11" -> createComment();
-                case "12" -> showReplies();
-                case "13" -> replyToComment();
-                case "14" -> votePost();
-                case "15" -> voteComment();
+                case "1" -> accountMenu();
+                case "2" -> subredditMenu();
+                case "3" -> postMenu();
+                case "4" -> commentMenu();
                 case "0" -> running = false;
-                default -> printer.println("Invalid option");
+                default -> printer.println("Invalid option.");
             }
         }
 
-        printer.println("Exit");
+        printer.println("Goodbye!");
     }
 
-    private void printOptions() {
+    private void printMainMenu() {
+        printer.println("");
+
         if (session.isLoggedIn()) {
             printer.println("Logged in as: " + session.getCurrentUser().username());
         } else {
             printer.println("Not logged in");
         }
 
-        printer.println("1. Show users");
-        printer.println("2. Register");
-        printer.println("3. Login");
-        printer.println("4. Logout");
-        printer.println("5. Show subreddits");
-        printer.println("6. Create subreddit");
-        printer.println("7. Join subreddit");
-        printer.println("8. Show posts");
-        printer.println("9. Create post");
-        printer.println("10. Show comments for post");
-        printer.println("11. Create comment");
-        printer.println("12. Show replies");
-        printer.println("13. Reply to comment");
-        printer.println("14. Vote post");
-        printer.println("15. Vote comment");
+        printer.println("1. Account");
+        printer.println("2. Subreddits");
+        printer.println("3. Posts");
+        printer.println("4. Comments");
         printer.println("0. Exit");
         printer.print("> ");
     }
 
-    private void showUsers() {
-        try {
-            List<UserDto> users = apiClient.getAllUsers();
+    private void accountMenu() {
+        boolean open = true;
 
-            if (users.isEmpty()) {
-                printer.println("No users found.");
-                return;
+        while (open) {
+            printer.println("");
+            printer.println("--- Account ---");
+
+            if (session.isLoggedIn()) {
+                printer.println("Logged in as: " + session.getCurrentUser().username());
+                printer.println("1. Logout");
+            } else {
+                printer.println("1. Register");
+                printer.println("2. Login");
             }
 
-            for (UserDto user : users) {
-                printer.println(
-                        user.id()
-                                + " | "
-                                + user.username()
-                                + " | "
-                                + user.email()
-                );
+            printer.println("0. Back");
+            printer.print("> ");
+
+            String option = reader.readLine();
+
+            if (session.isLoggedIn()) {
+                switch (option) {
+                    case "1" -> logout();
+                    case "0" -> open = false;
+                    default -> printer.println("Invalid option.");
+                }
+            } else {
+                switch (option) {
+                    case "1" -> register();
+                    case "2" -> login();
+                    case "0" -> open = false;
+                    default -> printer.println("Invalid option.");
+                }
             }
-        } catch (IllegalStateException exception) {
-            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void subredditMenu() {
+        boolean open = true;
+
+        while (open) {
+            printer.println("");
+            printer.println("--- Subreddits ---");
+            printer.println("1. Show subreddits");
+
+            if (session.isLoggedIn()) {
+                printer.println("2. Create subreddit");
+                printer.println("3. Join subreddit");
+            }
+
+            printer.println("0. Back");
+            printer.print("> ");
+
+            switch (reader.readLine()) {
+                case "1" -> showSubreddits();
+                case "2" -> createSubreddit();
+                case "3" -> joinSubreddit();
+                case "0" -> open = false;
+                default -> printer.println("Invalid option.");
+            }
+        }
+    }
+
+    private void postMenu() {
+        boolean open = true;
+
+        while (open) {
+            printer.println("");
+            printer.println("--- Posts ---");
+            printer.println("1. Show posts");
+
+            if (session.isLoggedIn()) {
+                printer.println("2. Create post");
+                printer.println("3. Vote post");
+            }
+
+            printer.println("0. Back");
+            printer.print("> ");
+
+            switch (reader.readLine()) {
+                case "1" -> showPosts();
+                case "2" -> createPost();
+                case "3" -> votePost();
+                case "0" -> open = false;
+                default -> printer.println("Invalid option.");
+            }
+        }
+    }
+
+    private void commentMenu() {
+        boolean open = true;
+
+        while (open) {
+            printer.println("");
+            printer.println("--- Comments ---");
+            printer.println("1. Show comments for post");
+            printer.println("2. Show replies");
+
+            if (session.isLoggedIn()) {
+                printer.println("3. Create comment");
+                printer.println("4. Reply to comment");
+                printer.println("5. Vote comment");
+            }
+
+            printer.println("0. Back");
+            printer.print("> ");
+
+            switch (reader.readLine()) {
+                case "1" -> showCommentsForPost();
+                case "2" -> showReplies();
+                case "3" -> createComment();
+                case "4" -> replyToComment();
+                case "5" -> voteComment();
+                case "0" -> open = false;
+                default -> printer.println("Invalid option.");
+            }
         }
     }
 
