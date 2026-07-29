@@ -257,6 +257,41 @@ public class ApiClient {
         }
     }
 
+    public List<PostDto> getPostsBySubreddit(Long subredditId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(
+                        baseUrl + "/api/posts/by-subreddit/" + subredditId
+                ))
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            ensureSuccess(response);
+
+            return objectMapper.readValue(
+                    response.body(),
+                    new TypeReference<List<PostDto>>() {
+                    }
+            );
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Unable to connect to the backend",
+                    exception
+            );
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(
+                    "The HTTP request was interrupted",
+                    exception
+            );
+        }
+    }
+
     public PostDto getPostById(Long postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/" + postId))

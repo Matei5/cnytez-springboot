@@ -142,11 +142,12 @@ public class Menu {
             printer.println("");
             printer.println("--- Posts ---");
             printer.println("1. Show posts");
-            printer.println("2. View post");
+            printer.println("2. Show posts by subreddit");
+            printer.println("3. View post");
 
             if (session.isLoggedIn()) {
-                printer.println("3. Create post");
-                printer.println("4. Vote post");
+                printer.println("4. Create post");
+                printer.println("5. Vote post");
             }
 
             printer.println("0. Back");
@@ -154,9 +155,10 @@ public class Menu {
 
             switch (reader.readLine()) {
                 case "1" -> showPosts();
-                case "2" -> viewPost();
-                case "3" -> createPost();
-                case "4" -> votePost();
+                case "2" -> showPostsBySubreddit();
+                case "3" -> viewPost();
+                case "4" -> createPost();
+                case "5" -> votePost();
                 case "0" -> open = false;
                 default -> printer.println("Invalid option.");
             }
@@ -364,27 +366,46 @@ public class Menu {
     private void showPosts() {
         try {
             List<PostDto> posts = apiClient.getAllPosts();
-
-            if (posts.isEmpty()) {
-                printer.println("No posts found.");
-                return;
-            }
-
-            for (PostDto post : posts) {
-                printer.println(
-                        post.id()
-                                + " | r/"
-                                + post.subredditName()
-                                + " | "
-                                + post.title()
-                                + " | by "
-                                + post.ownerUsername()
-                                + " | score: "
-                                + post.score()
-                );
-            }
+            printPosts(posts);
         } catch (IllegalStateException exception) {
             printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void showPostsBySubreddit() {
+        printer.print("Subreddit ID: ");
+
+        try {
+            Long subredditId = Long.parseLong(reader.readLine());
+            List<PostDto> posts = apiClient.getPostsBySubreddit(subredditId);
+            printPosts(posts);
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid subreddit ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void printPosts(List<PostDto> posts) {
+        if (posts.isEmpty()) {
+            printer.println("No posts found.");
+            return;
+        }
+
+        for (PostDto post : posts) {
+            printer.println(
+                    post.id()
+                            + " | r/"
+                            + post.subredditName()
+                            + " | "
+                            + post.title()
+                            + " | by "
+                            + post.ownerUsername()
+                            + " | score: "
+                            + post.score()
+                            + " | comments: "
+                            + post.commentCount()
+            );
         }
     }
 
@@ -418,6 +439,7 @@ public class Menu {
                             + post.downvotes()
                             + " down)"
             );
+            printer.println("Comments: " + post.commentCount());
             printer.println("Image: " + image);
         } catch (NumberFormatException exception) {
             printer.println("Invalid post ID.");
@@ -494,6 +516,8 @@ public class Menu {
                                 + comment.text()
                                 + " | score: "
                                 + comment.score()
+                                + " | replies: "
+                                + comment.replyCount()
                 );
             }
         } catch (NumberFormatException exception) {
@@ -572,6 +596,8 @@ public class Menu {
                                 + reply.text()
                                 + " | score: "
                                 + reply.score()
+                                + " | replies: "
+                                + reply.replyCount()
                 );
             }
         } catch (NumberFormatException exception) {
