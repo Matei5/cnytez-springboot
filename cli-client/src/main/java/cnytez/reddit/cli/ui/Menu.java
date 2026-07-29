@@ -1,10 +1,14 @@
 package cnytez.reddit.cli.ui;
 
 import cnytez.reddit.cli.client.ApiClient;
+import cnytez.reddit.cli.dto.CreateSubredditRequest;
 import cnytez.reddit.cli.dto.LoginRequest;
 import cnytez.reddit.cli.dto.RegisterRequest;
+import cnytez.reddit.cli.dto.SubredditDto;
 import cnytez.reddit.cli.dto.UserDto;
 import cnytez.reddit.cli.session.Session;
+
+import java.util.List;
 
 public class Menu {
 
@@ -37,6 +41,9 @@ public class Menu {
                 case "2" -> register();
                 case "3" -> login();
                 case "4" -> logout();
+                case "5" -> showSubreddits();
+                case "6" -> createSubreddit();
+                case "7" -> joinSubreddit();
                 case "0" -> running = false;
                 default -> printer.println("Invalid option");
             }
@@ -56,14 +63,31 @@ public class Menu {
         printer.println("2. Register");
         printer.println("3. Login");
         printer.println("4. Logout");
+        printer.println("5. Show subreddits");
+        printer.println("6. Create subreddit");
+        printer.println("7. Join subreddit");
         printer.println("0. Exit");
         printer.print("> ");
     }
 
     private void showUsers() {
         try {
-            String json = apiClient.getAllUsers();
-            printer.println(json);
+            List<UserDto> users = apiClient.getAllUsers();
+
+            if (users.isEmpty()) {
+                printer.println("No users found.");
+                return;
+            }
+
+            for (UserDto user : users) {
+                printer.println(
+                        user.id()
+                                + " | "
+                                + user.username()
+                                + " | "
+                                + user.email()
+                );
+            }
         } catch (IllegalStateException exception) {
             printer.println("Error: " + exception.getMessage());
         }
@@ -137,5 +161,103 @@ public class Menu {
         session.logout();
 
         printer.println("Goodbye, " + username + "!");
+    }
+
+    private void showSubreddits() {
+        try {
+            List<SubredditDto> subreddits = apiClient.getAllSubreddits();
+
+            if (subreddits.isEmpty()) {
+                printer.println("No subreddits found.");
+                return;
+            }
+
+            for (SubredditDto subreddit : subreddits) {
+                printer.println(
+                        subreddit.id()
+                                + " | r/"
+                                + subreddit.name()
+                                + " | owner: "
+                                + subreddit.ownerUsername()
+                                + " | members: "
+                                + subreddit.memberCount()
+                );
+            }
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void createSubreddit() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        printer.print("Name: ");
+        String name = reader.readLine();
+
+        printer.print("Photo (optional): ");
+        String photo = reader.readLine();
+
+        printer.print("Banner (optional): ");
+        String banner = reader.readLine();
+
+        if (photo.isBlank()) {
+            photo = null;
+        }
+        if (banner.isBlank()) {
+            banner = null;
+        }
+
+        CreateSubredditRequest request = new CreateSubredditRequest(
+                name,
+                photo,
+                banner,
+                session.getCurrentUser().id()
+        );
+
+        try {
+            SubredditDto subreddit = apiClient.createSubreddit(request);
+            printer.println(
+                    "Subreddit created: r/"
+                            + subreddit.name()
+                            + " (id="
+                            + subreddit.id()
+                            + ")"
+            );
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void joinSubreddit() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        printer.print("Subreddit ID: ");
+
+        try {
+            Long subredditId = Long.parseLong(reader.readLine());
+            Long userId = session.getCurrentUser().id();
+
+            SubredditDto subreddit = apiClient.joinSubreddit(
+                    subredditId,
+                    userId
+            );
+
+            printer.println(
+                    "Joined r/"
+                            + subreddit.name()
+                            + ". Members: "
+                            + subreddit.memberCount()
+            );
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid subreddit ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
     }
 }
