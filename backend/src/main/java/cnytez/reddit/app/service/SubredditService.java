@@ -4,6 +4,7 @@ import cnytez.reddit.app.dto.CreateSubredditRequest;
 import cnytez.reddit.app.dto.SubredditDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
+import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.Subreddit;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.SubredditRepository;
@@ -21,6 +22,7 @@ public class SubredditService {
 
     private final SubredditRepository subredditRepository;
     private final UserRepository userRepository;
+    private final LogManager logManager;
 
     public List<SubredditDto> getAllSubreddits() {
         return subredditRepository.findAll().stream()
@@ -56,7 +58,8 @@ public class SubredditService {
 
         // Owner automatically becomes a member
         subreddit.addMember(owner);
-
+        logManager.log("Create subreddit success! User with id " + owner.getId() +
+                " created subreddit with name " + subreddit.getName());
         return toDto(subredditRepository.save(subreddit));
     }
 
@@ -67,6 +70,7 @@ public class SubredditService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         subreddit.addMember(user);
+        logManager.log("Join subreddit success! User with id " + userId + " joined subreddit with id " + subredditId);
         return toDto(subredditRepository.save(subreddit));
     }
 
@@ -81,6 +85,7 @@ public class SubredditService {
         }
 
         subreddit.removeMember(user);
+        logManager.log("Leave subreddit success! The user with id " + userId + " left subreddit with id " + subredditId);
         return toDto(subredditRepository.save(subreddit));
     }
 

@@ -5,12 +5,14 @@ import cnytez.reddit.app.dto.CreateCommentRequest;
 import cnytez.reddit.app.dto.VoteRequest;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
+import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.*;
 import cnytez.reddit.app.repository.CommentRepository;
 import cnytez.reddit.app.repository.CommentVoteRepository;
 import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -26,6 +29,7 @@ public class CommentService {
     private final CommentVoteRepository commentVoteRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final LogManager logManager;
 
     public List<CommentDto> getCommentsByPost(Long postId) {
         Post post = postRepository.findById(postId)
@@ -92,6 +96,8 @@ public class CommentService {
                 .build();
         commentVoteRepository.save(creatorVote);
 
+        logManager.log("Create comment success! User with id " + owner.getId() +
+                " created comment with id " + comment.getId());
         return toDto(savedComment);
     }
 
@@ -121,7 +127,8 @@ public class CommentService {
                     .build();
             commentVoteRepository.save(newVote);
         }
-
+        logManager.log("Vote comment success! User with id " + user.getId() +
+                " voted comment with id " + commentId);
         return toDto(comment);
     }
 
@@ -144,6 +151,8 @@ public class CommentService {
         comment.setDeletionDate(LocalDateTime.now());
 
         commentRepository.save(comment);
+        logManager.log("Delete comment success! User with id " + requestingUserId +
+                " deleted comment with id " + commentId);
     }
 
     private Comment findCommentById(Long id) {
@@ -154,6 +163,7 @@ public class CommentService {
     private CommentDto toDto(Comment comment) {
         long upvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.UPVOTE);
         long downvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
+        long replyCount = commentRepository.countByParentComment(comment);
         return new CommentDto(
                 comment.getId(),
                 comment.getTitle(),
@@ -166,7 +176,8 @@ public class CommentService {
                 comment.getParentComment() != null ? comment.getParentComment().getId() : null,
                 (int) (upvotes - downvotes),
                 (int) upvotes,
-                (int) downvotes
+                (int) downvotes,
+                (int) replyCount
         );
     }
 }

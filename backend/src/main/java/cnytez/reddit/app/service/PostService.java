@@ -5,12 +5,15 @@ import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.VoteRequest;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
+import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.*;
+import cnytez.reddit.app.repository.CommentRepository;
 import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.PostVoteRepository;
 import cnytez.reddit.app.repository.SubredditRepository;
 import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,14 +21,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
 
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final SubredditRepository subredditRepository;
+    private final LogManager logManager;
 
     public List<PostDto> getAllPosts() {
         return postRepository.findAllByOrderByCreationDateDesc().stream()
@@ -77,7 +83,8 @@ public class PostService {
                 .voteType(VoteType.UPVOTE)
                 .build();
         postVoteRepository.save(creatorVote);
-
+        logManager.log("Create post success! User with id " + owner.getId() +
+                " created post with id " + post.getId() + " for subreddit with id " + subreddit.getId());
         return toDto(savedPost);
     }
 
@@ -106,6 +113,8 @@ public class PostService {
                     .voteType(request.voteType())
                     .build();
             postVoteRepository.save(newVote);
+            logManager.log("Vote post success! User with id " + user.getId() +
+                    " voted post with id " + postId);
         }
 
         return toDto(post);
@@ -130,6 +139,7 @@ public class PostService {
         post.setDeletionDate(LocalDateTime.now());
 
         postRepository.save(post);
+        logManager.log("Delete post success! User with id " + requestingUserId + " deleted post with id " + postId);
     }
 
     Post findPostById(Long id) {
@@ -140,6 +150,7 @@ public class PostService {
     private PostDto toDto(Post post) {
         long upvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);
         long downvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
+        long commentCount = commentRepository.countByPost(post);
         return new PostDto(
                 post.getId(),
                 post.getTitle(),
@@ -152,7 +163,8 @@ public class PostService {
                 post.getSubreddit().getName(),
                 (int) (upvotes - downvotes),
                 (int) upvotes,
-                (int) downvotes
+                (int) downvotes,
+                (int) commentCount
         );
     }
 }
