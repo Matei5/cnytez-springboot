@@ -44,9 +44,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException("Unexpected response code: " + response.statusCode());
-            }
+            ensureSuccess(response);
             return objectMapper.readValue(
                     response.body(),
                     new TypeReference<List<UserDto>>() {
@@ -75,14 +73,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), UserDto.class);
 
@@ -115,14 +106,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), UserDto.class);
 
@@ -152,14 +136,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(
                     response.body(),
@@ -195,14 +172,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), SubredditDto.class);
         } catch (IOException exception) {
@@ -237,14 +207,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), SubredditDto.class);
         } catch (IOException exception) {
@@ -273,20 +236,42 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(
                     response.body(),
                     new TypeReference<List<PostDto>>() {
                     }
             );
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Unable to connect to the backend",
+                    exception
+            );
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(
+                    "The HTTP request was interrupted",
+                    exception
+            );
+        }
+    }
+
+    public PostDto getPostById(Long postId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/posts/" + postId))
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            ensureSuccess(response);
+
+            return objectMapper.readValue(response.body(), PostDto.class);
         } catch (IOException exception) {
             throw new IllegalStateException(
                     "Unable to connect to the backend",
@@ -316,14 +301,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), PostDto.class);
         } catch (IOException exception) {
@@ -354,14 +332,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(
                     response.body(),
@@ -397,14 +368,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), CommentDto.class);
         } catch (IOException exception) {
@@ -435,14 +399,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(
                     response.body(),
@@ -480,14 +437,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), PostDto.class);
         } catch (IOException exception) {
@@ -527,14 +477,7 @@ public class ApiClient {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new IllegalStateException(
-                        "The backend responded with status "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
-                );
-            }
+            ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), CommentDto.class);
         } catch (IOException exception) {
@@ -547,6 +490,16 @@ public class ApiClient {
             throw new IllegalStateException(
                     "The HTTP request was interrupted",
                     exception
+            );
+        }
+    }
+    private void ensureSuccess(HttpResponse<String> response) {
+        if (response.statusCode() < 200 || response.statusCode() > 299) {
+            throw new IllegalStateException(
+                    "Request failed with status "
+                            + response.statusCode()
+                            + ": "
+                            + response.body()
             );
         }
     }

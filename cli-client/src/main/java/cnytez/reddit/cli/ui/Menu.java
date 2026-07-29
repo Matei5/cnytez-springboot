@@ -142,10 +142,11 @@ public class Menu {
             printer.println("");
             printer.println("--- Posts ---");
             printer.println("1. Show posts");
+            printer.println("2. View post");
 
             if (session.isLoggedIn()) {
-                printer.println("2. Create post");
-                printer.println("3. Vote post");
+                printer.println("3. Create post");
+                printer.println("4. Vote post");
             }
 
             printer.println("0. Back");
@@ -153,8 +154,9 @@ public class Menu {
 
             switch (reader.readLine()) {
                 case "1" -> showPosts();
-                case "2" -> createPost();
-                case "3" -> votePost();
+                case "2" -> viewPost();
+                case "3" -> createPost();
+                case "4" -> votePost();
                 case "0" -> open = false;
                 default -> printer.println("Invalid option.");
             }
@@ -381,6 +383,44 @@ public class Menu {
                                 + post.score()
                 );
             }
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void viewPost() {
+        printer.print("Post ID: ");
+
+        try {
+            Long postId = Long.parseLong(reader.readLine());
+            PostDto post = apiClient.getPostById(postId);
+
+            String image = post.image();
+            if (image == null || image.isBlank()) {
+                image = "none";
+            }
+
+            printer.println("");
+            printer.println("--- Post #" + post.id() + " ---");
+            printer.println("r/" + post.subredditName());
+            printer.println(post.title());
+            printer.println("");
+            printer.println(post.text());
+            printer.println("");
+            printer.println("Posted by: " + post.ownerUsername());
+            printer.println("Created at: " + post.createdAt());
+            printer.println(
+                    "Score: "
+                            + post.score()
+                            + " ("
+                            + post.upvotes()
+                            + " up, "
+                            + post.downvotes()
+                            + " down)"
+            );
+            printer.println("Image: " + image);
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid post ID.");
         } catch (IllegalStateException exception) {
             printer.println("Error: " + exception.getMessage());
         }
