@@ -69,7 +69,16 @@ public class PostService {
                 .creationDate(LocalDateTime.now())
                 .build();
 
-        return toDto(postRepository.save(post));
+        Post savedPost = postRepository.save(post);
+
+        PostVote creatorVote = PostVote.builder()
+                .user(owner)
+                .post(savedPost)
+                .voteType(VoteType.UPVOTE)
+                .build();
+        postVoteRepository.save(creatorVote);
+
+        return toDto(savedPost);
     }
 
     @Transactional

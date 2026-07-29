@@ -83,7 +83,16 @@ public class CommentService {
                 .creationDate(LocalDateTime.now())
                 .build();
 
-        return toDto(commentRepository.save(comment));
+        Comment savedComment = commentRepository.save(comment);
+
+        CommentVote creatorVote = CommentVote.builder()
+                .user(owner)
+                .comment(savedComment)
+                .voteType(VoteType.UPVOTE)
+                .build();
+        commentVoteRepository.save(creatorVote);
+
+        return toDto(savedComment);
     }
 
     @Transactional
