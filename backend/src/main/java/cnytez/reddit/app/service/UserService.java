@@ -78,6 +78,7 @@ public class UserService {
         user.setDeletionDate(LocalDateTime.now());
 
         userRepository.save(user);
+        logManager.log("Delete user success! User with id " + id + " deleted");
     }
 
     private UserDto toDto(User user) {
