@@ -4,6 +4,7 @@ import cnytez.reddit.app.dto.UpdateProfileRequest;
 import cnytez.reddit.app.dto.UserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
+import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +16,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
     private final UserRepository userRepository;
+    private final LogManager logManager;
 
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
@@ -50,6 +51,7 @@ public class UserService {
             user.setProfilePhoto(request.profilePhoto());
         }
 
+        logManager.log("Update profile success! User with id " + id + " updated");
         return toDto(userRepository.save(user));
     }
 

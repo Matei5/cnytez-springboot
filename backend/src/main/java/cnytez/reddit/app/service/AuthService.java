@@ -5,6 +5,7 @@ import cnytez.reddit.app.dto.RegisterRequest;
 import cnytez.reddit.app.dto.UserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.UnauthorizedException;
+import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final LogManager logManager;
 
     public UserDto register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
@@ -35,6 +37,7 @@ public class AuthService {
                 .build();
 
         User saved = userRepository.save(user);
+        logManager.log("Register success! User with id " + user.getId() + " registered");
         return toDto(saved);
     }
 
@@ -46,6 +49,7 @@ public class AuthService {
             throw new UnauthorizedException("Invalid username or password.");
         }
 
+        logManager.log("Login success! User with id " + user.getId() + " logged in");
         return toDto(user);
     }
 
