@@ -1,24 +1,28 @@
 package cnytez.reddit.cli.ui;
 
 import cnytez.reddit.cli.client.ApiClient;
-
+import cnytez.reddit.cli.dto.LoginRequest;
 import cnytez.reddit.cli.dto.RegisterRequest;
 import cnytez.reddit.cli.dto.UserDto;
+import cnytez.reddit.cli.session.Session;
 
 public class Menu {
 
     private final ConsoleReader reader;
     private final ConsolePrinter printer;
     private final ApiClient apiClient;
+    private final Session session;
 
     public Menu(
             ConsoleReader reader,
             ConsolePrinter printer,
-            ApiClient apiClient
+            ApiClient apiClient,
+            Session session
     ) {
         this.reader = reader;
         this.printer = printer;
         this.apiClient = apiClient;
+        this.session = session;
     }
 
     public void start()  {
@@ -31,6 +35,8 @@ public class Menu {
             switch (option) {
                 case "1" -> showUsers();
                 case "2" -> register();
+                case "3" -> login();
+                case "4" -> logout();
                 case "0" -> running = false;
                 default -> printer.println("Invalid option");
             }
@@ -40,10 +46,17 @@ public class Menu {
     }
 
     private void printOptions() {
-        printer.println("");
-        printer.println("1. Afiseaza utilizatorii");
-        printer.println("2. Inregistrare");
-        printer.println("0. Iesire");
+        if (session.isLoggedIn()) {
+            printer.println("Logged in as: " + session.getCurrentUser().username());
+        } else {
+            printer.println("Not logged in");
+        }
+
+        printer.println("1. Show users");
+        printer.println("2. Register");
+        printer.println("3. Login");
+        printer.println("4. Logout");
+        printer.println("0. Exit");
         printer.print("> ");
     }
 
@@ -52,12 +65,12 @@ public class Menu {
             String json = apiClient.getAllUsers();
             printer.println(json);
         } catch (IllegalStateException exception) {
-            printer.println("Eroare: " + exception.getMessage());
+            printer.println("Error: " + exception.getMessage());
         }
     }
 
     private void register() {
-        printer.print("Nume: ");
+        printer.print("Name: ");
         String name = reader.readLine();
 
         printer.print("Username: ");
@@ -66,10 +79,10 @@ public class Menu {
         printer.print("Email: ");
         String email = reader.readLine();
 
-        printer.print("Parola: ");
+        printer.print("Password: ");
         String password = reader.readLine();
 
-        printer.print("Poza de profil (optional): ");
+        printer.print("Profile photo (optional): ");
         String profilePhoto = reader.readLine();
 
         if (profilePhoto.isBlank()) {
@@ -87,13 +100,42 @@ public class Menu {
         try {
             UserDto user = apiClient.register(request);
             printer.println(
-                    "Utilizator creat: "
+                    "User created: "
                             + user.username()
                             + " (id=" + user.id() + ")"
             );
         } catch (IllegalStateException exception) {
-            printer.println("Eroare: " + exception.getMessage());
+            printer.println("Error: " + exception.getMessage());
         }
     }
 
+    private void login() {
+        printer.print("Username: ");
+        String username = reader.readLine();
+
+        printer.print("Password: ");
+        String password = reader.readLine();
+
+        LoginRequest request = new LoginRequest(username, password);
+
+        try {
+            UserDto user = apiClient.login(request);
+            session.login(user);
+
+            printer.println("Login successful. Welcome, " + user.username() + "!");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+    private void logout() {
+        if (!session.isLoggedIn()) {
+            printer.println("No user is logged in.");
+            return;
+        }
+
+        String username = session.getCurrentUser().username();
+        session.logout();
+
+        printer.println("Goodbye, " + username + "!");
+    }
 }

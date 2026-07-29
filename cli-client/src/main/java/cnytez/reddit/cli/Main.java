@@ -4,6 +4,7 @@ import cnytez.reddit.cli.ui.ConsolePrinter;
 import cnytez.reddit.cli.ui.ConsoleReader;
 import cnytez.reddit.cli.ui.Menu;
 import cnytez.reddit.cli.client.ApiClient;
+import cnytez.reddit.cli.session.Session;
 
 public class Main {
 
@@ -11,8 +12,9 @@ public class Main {
         ConsoleReader reader = new ConsoleReader();
         ConsolePrinter printer = new ConsolePrinter();
         ApiClient apiClient = new ApiClient("http://localhost:9090");
+        Session session = new Session();
 
-        Menu menu = new Menu(reader, printer, apiClient);
+        Menu menu = new Menu(reader, printer, apiClient, session);
         menu.start();
     }
 }
