@@ -13,6 +13,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByPost(Post post);
 
+    long countByPost(Post post);
+
     List<Comment> findByOwner(User owner);
 
     // direct post comments
@@ -20,4 +22,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     // replies to a comment
     List<Comment> findByParentComment(Comment parentComment);
+
+    long countByParentComment(Comment parentComment);
 }

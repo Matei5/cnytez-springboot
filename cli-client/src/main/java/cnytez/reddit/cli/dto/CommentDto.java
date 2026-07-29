@@ -12,6 +12,7 @@ public record CommentDto(
         Long parentCommentId,
         int score,
         int upvotes,
-        int downvotes
+        int downvotes,
+        int replyCount
 ) {
 }

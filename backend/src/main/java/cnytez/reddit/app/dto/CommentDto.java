@@ -14,5 +14,6 @@ public record CommentDto(
         Long parentCommentId,   // null for top-level comments
         int score,
         int upvotes,
-        int downvotes
+        int downvotes,
+        int replyCount
 ) {}
