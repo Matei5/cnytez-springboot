@@ -3,6 +3,7 @@ package cnytez.reddit.app.log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +17,9 @@ public class LogManager {
     }
 
     public void log(String message) {
+        LocalDateTime timeStamp = LocalDateTime.now();
         for (Logger logger : loggers) {
-            logger.log(message);
+            logger.log("[" + timeStamp + "] " + message);
         }
     }
 }
