@@ -148,6 +148,7 @@ public class Menu {
             if (session.isLoggedIn()) {
                 printer.println("4. Create post");
                 printer.println("5. Vote post");
+                printer.println("6. Delete post");
             }
 
             printer.println("0. Back");
@@ -159,6 +160,7 @@ public class Menu {
                 case "3" -> viewPost();
                 case "4" -> createPost();
                 case "5" -> votePost();
+                case "6" -> deletePost();
                 case "0" -> open = false;
                 default -> printer.println("Invalid option.");
             }
@@ -178,6 +180,7 @@ public class Menu {
                 printer.println("3. Create comment");
                 printer.println("4. Reply to comment");
                 printer.println("5. Vote comment");
+                printer.println("6. Delete comment");
             }
 
             printer.println("0. Back");
@@ -189,6 +192,7 @@ public class Menu {
                 case "3" -> createComment();
                 case "4" -> replyToComment();
                 case "5" -> voteComment();
+                case "6" -> deleteComment();
                 case "0" -> open = false;
                 default -> printer.println("Invalid option.");
             }
@@ -702,6 +706,27 @@ public class Menu {
         }
     }
 
+    private void deletePost() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        printer.print("Post ID: ");
+
+        try {
+            Long postId = Long.parseLong(reader.readLine());
+            Long userId = session.getCurrentUser().id();
+
+            apiClient.deletePost(postId, userId);
+            printer.println("Post deleted.");
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid post ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
     private void voteComment() {
         if (!session.isLoggedIn()) {
             printer.println("You must log in first.");
@@ -740,6 +765,27 @@ public class Menu {
                             + comment.downvotes()
                             + " down)"
             );
+        } catch (NumberFormatException exception) {
+            printer.println("Invalid comment ID.");
+        } catch (IllegalStateException exception) {
+            printer.println("Error: " + exception.getMessage());
+        }
+    }
+
+    private void deleteComment() {
+        if (!session.isLoggedIn()) {
+            printer.println("You must log in first.");
+            return;
+        }
+
+        printer.print("Comment ID: ");
+
+        try {
+            Long commentId = Long.parseLong(reader.readLine());
+            Long userId = session.getCurrentUser().id();
+
+            apiClient.deleteComment(commentId, userId);
+            printer.println("Comment deleted.");
         } catch (NumberFormatException exception) {
             printer.println("Invalid comment ID.");
         } catch (IllegalStateException exception) {

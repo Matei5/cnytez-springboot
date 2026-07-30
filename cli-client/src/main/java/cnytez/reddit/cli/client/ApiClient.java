@@ -353,6 +353,39 @@ public class ApiClient {
         }
     }
 
+    public void deletePost(Long postId, Long requestingUserId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(
+                        baseUrl
+                                + "/api/posts/"
+                                + postId
+                                + "?requestingUserId="
+                                + requestingUserId
+                ))
+                .DELETE()
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            ensureSuccess(response);
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Unable to connect to the backend",
+                    exception
+            );
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(
+                    "The HTTP request was interrupted",
+                    exception
+            );
+        }
+    }
+
     public List<CommentDto> getCommentsByPost(Long postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(
@@ -406,6 +439,39 @@ public class ApiClient {
             ensureSuccess(response);
 
             return objectMapper.readValue(response.body(), CommentDto.class);
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Unable to connect to the backend",
+                    exception
+            );
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(
+                    "The HTTP request was interrupted",
+                    exception
+            );
+        }
+    }
+
+    public void deleteComment(Long commentId, Long requestingUserId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(
+                        baseUrl
+                                + "/api/comments/"
+                                + commentId
+                                + "?requestingUserId="
+                                + requestingUserId
+                ))
+                .DELETE()
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            ensureSuccess(response);
         } catch (IOException exception) {
             throw new IllegalStateException(
                     "Unable to connect to the backend",
