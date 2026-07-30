@@ -54,15 +54,15 @@ public class AuthService {
     }
 
     private UserDto toDto(User user) {
-        String name = null;
+        String username = null;
 
         if (user.getDeletionDate() != null) {
-            name = "[deleted]";
+            username = "[deleted]";
         } else {
-            name = user.getName();
+            username = user.getName();
         }
 
-        return new UserDto(user.getId(), name, user.getUsername(),
+        return new UserDto(user.getId(), user.getName(), username,
                 user.getEmail(), user.getProfilePhoto());
     }
 }

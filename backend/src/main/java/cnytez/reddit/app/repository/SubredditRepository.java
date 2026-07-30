@@ -15,4 +15,6 @@ public interface SubredditRepository extends JpaRepository<Subreddit, Long> {
     boolean existsByName(String name);
 
     List<Subreddit> findByOwnerId(Long ownerId);
+
+    List<Subreddit> findAllByMembersId(Long userId);
 }

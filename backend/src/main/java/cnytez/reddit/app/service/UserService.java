@@ -5,6 +5,7 @@ import cnytez.reddit.app.dto.UserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
+import cnytez.reddit.app.model.Subreddit;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.SubredditRepository;
 import cnytez.reddit.app.repository.UserRepository;
@@ -69,10 +70,18 @@ public class UserService {
             throw new BadRequestException("User is owner of one or more subreddits");
         }
 
+        List<Subreddit> userSubreddits = subredditRepository.findAllByMembersId(id);
+
+        for (Subreddit subreddit : userSubreddits) {
+            subreddit.removeMember(user);
+        }
+
+        subredditRepository.saveAll(userSubreddits);
+
         user.setName(null);
         user.setUsername("[deleted_" + user.getId() + "]");
-        user.setEmail(null);
-        user.setPassword(null);
+        user.setEmail("[deleted_" + user.getId() + "]");
+        user.setPassword("deleted");
         user.setProfilePhoto(null);
 
         user.setDeletionDate(LocalDateTime.now());
@@ -82,15 +91,15 @@ public class UserService {
     }
 
     private UserDto toDto(User user) {
-        String name = null;
+        String username = null;
 
         if (user.getDeletionDate() != null) {
-            name = "[deleted]";
+            username = "[deleted]";
         } else {
-            name = user.getName();
+            username = user.getName();
         }
 
-        return new UserDto(user.getId(), name, user.getUsername(),
+        return new UserDto(user.getId(), user.getName(), username,
                 user.getEmail(), user.getProfilePhoto());
     }
 }
