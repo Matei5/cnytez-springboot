@@ -61,15 +61,15 @@ public class PostService {
 
     @Transactional
     public PostDto createPost(CreatePostRequest request) {
-        User owner = userRepository.findByIdAndDeletionDateIsNull(request.ownerId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.ownerId()));
-        Subreddit subreddit = subredditRepository.findById(request.subredditId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + request.subredditId()));
+        User owner = userRepository.findByUsernameAndDeletionDateIsNull(request.author())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + request.author()));
+        Subreddit subreddit = subredditRepository.findByName(request.subreddit())
+                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with name: " + request.subreddit()));
 
         Post post = Post.builder()
                 .title(request.title())
-                .text(request.text())
-                .image(request.image())
+                .text(request.content())
+                .image(null)
                 .owner(owner)
                 .subreddit(subreddit)
                 .creationDate(LocalDateTime.now())

@@ -96,7 +96,7 @@ public class UserService {
         if (user.getDeletionDate() != null) {
             username = "[deleted]";
         } else {
-            username = user.getName();
+            username = user.getUsername();
         }
 
         return new UserDto(user.getId(), user.getName(), username,

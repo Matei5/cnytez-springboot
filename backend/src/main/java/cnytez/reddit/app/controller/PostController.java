@@ -1,5 +1,6 @@
 package cnytez.reddit.app.controller;
 
+import cnytez.reddit.app.dto.ApiResponse;
 import cnytez.reddit.app.dto.CreatePostRequest;
 import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.VoteRequest;
@@ -20,14 +21,20 @@ public class PostController {
 
     // GET /api/posts
     @GetMapping
-    public ResponseEntity<List<PostDto>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts() {
+        List<PostDto> posts = postService.getAllPosts();
+        ApiResponse<List<PostDto>> response = new ApiResponse<>(true, posts);
+
+        return ResponseEntity.ok(response);
     }
 
     // GET /api/posts/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable Long id) {
-        return ResponseEntity.ok(postService.getPostById(id));
+    public ResponseEntity<ApiResponse<PostDto>> getPostById(@PathVariable Long id) {
+        PostDto post = postService.getPostById(id);
+        ApiResponse<PostDto> response = new ApiResponse<>(true, post);
+
+        return ResponseEntity.ok(response);
     }
 
     // GET /api/posts/by-subreddit/{subredditId}
@@ -44,8 +51,10 @@ public class PostController {
 
     // POST /api/posts
     @PostMapping
-    public ResponseEntity<PostDto> createPost(@RequestBody CreatePostRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(request));
+    public ResponseEntity<ApiResponse<PostDto>> createPost(@RequestBody CreatePostRequest request) {
+        PostDto post = postService.createPost(request);
+        ApiResponse<PostDto> response = new ApiResponse<>(true, post);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // POST /api/posts/{id}/vote
