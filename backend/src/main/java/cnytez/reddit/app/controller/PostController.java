@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -30,7 +31,7 @@ public class PostController {
 
     // GET /api/posts/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PostDto>> getPostById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PostDto>> getPostById(@PathVariable UUID id) {
         PostDto post = postService.getPostById(id);
         ApiResponse<PostDto> response = new ApiResponse<>(true, post);
 
@@ -39,13 +40,13 @@ public class PostController {
 
     // GET /api/posts/by-subreddit/{subredditId}
     @GetMapping("/by-subreddit/{subredditId}")
-    public ResponseEntity<List<PostDto>> getPostsBySubreddit(@PathVariable Long subredditId) {
+    public ResponseEntity<List<PostDto>> getPostsBySubreddit(@PathVariable UUID subredditId) {
         return ResponseEntity.ok(postService.getPostsBySubreddit(subredditId));
     }
 
     // GET /api/posts/by-user/{userId}
     @GetMapping("/by-user/{userId}")
-    public ResponseEntity<List<PostDto>> getPostsByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<PostDto>> getPostsByUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(postService.getPostsByUser(userId));
     }
 
@@ -59,14 +60,14 @@ public class PostController {
 
     // POST /api/posts/{id}/vote
     @PostMapping("/{id}/vote")
-    public ResponseEntity<PostDto> vote(@PathVariable Long id, @RequestBody VoteRequest request) {
+    public ResponseEntity<PostDto> vote(@PathVariable UUID id, @RequestBody VoteRequest request) {
         return ResponseEntity.ok(postService.vote(id, request));
     }
 
     // DELETE /api/posts/{id}?requestingUserId={userId}
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id,
-                                           @RequestParam Long requestingUserId) {
+    public ResponseEntity<Void> deletePost(@PathVariable UUID id,
+                                           @RequestParam UUID requestingUserId) {
         postService.deletePost(id, requestingUserId);
         return ResponseEntity.noContent().build();
     }

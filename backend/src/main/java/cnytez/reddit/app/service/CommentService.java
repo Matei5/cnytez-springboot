@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -31,7 +32,7 @@ public class CommentService {
     private final UserRepository userRepository;
     private final LogManager logManager;
 
-    public List<CommentDto> getCommentsByPost(Long postId) {
+    public List<CommentDto> getCommentsByPost(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
         // Return only top-level comments; clients can fetch replies per comment
@@ -40,14 +41,14 @@ public class CommentService {
                 .toList();
     }
 
-    public List<CommentDto> getReplies(Long parentCommentId) {
+    public List<CommentDto> getReplies(UUID parentCommentId) {
         Comment parent = findCommentById(parentCommentId);
         return commentRepository.findByParentComment(parent).stream()
                 .map(this::toDto)
                 .toList();
     }
 
-    public List<CommentDto> getCommentsByUser(Long userId) {
+    public List<CommentDto> getCommentsByUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         return commentRepository.findByOwner(user).stream()
@@ -55,7 +56,7 @@ public class CommentService {
                 .toList();
     }
 
-    public CommentDto getCommentById(Long id) {
+    public CommentDto getCommentById(UUID id) {
         return toDto(findCommentById(id));
     }
 
@@ -102,7 +103,7 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentDto vote(Long commentId, VoteRequest request) {
+    public CommentDto vote(UUID commentId, VoteRequest request) {
         Comment comment = findCommentById(commentId);
         User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
@@ -133,7 +134,7 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteComment(Long commentId, Long requestingUserId) {
+    public void deleteComment(UUID commentId, UUID requestingUserId) {
         Comment comment = findCommentById(commentId);
         User owner = comment.getOwner();
 
@@ -155,7 +156,7 @@ public class CommentService {
                 " deleted comment with id " + commentId);
     }
 
-    private Comment findCommentById(Long id) {
+    private Comment findCommentById(UUID id) {
         return commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + id));
     }

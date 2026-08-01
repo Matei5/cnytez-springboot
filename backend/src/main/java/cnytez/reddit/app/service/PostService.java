@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -39,7 +40,7 @@ public class PostService {
                 .toList();
     }
 
-    public List<PostDto> getPostsBySubreddit(Long subredditId) {
+    public List<PostDto> getPostsBySubreddit(UUID subredditId) {
         Subreddit subreddit = subredditRepository.findById(subredditId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + subredditId));
         return postRepository.findBySubredditOrderByCreationDateDesc(subreddit).stream()
@@ -47,7 +48,7 @@ public class PostService {
                 .toList();
     }
 
-    public List<PostDto> getPostsByUser(Long userId) {
+    public List<PostDto> getPostsByUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         return postRepository.findByOwner(user).stream()
@@ -55,7 +56,7 @@ public class PostService {
                 .toList();
     }
 
-    public PostDto getPostById(Long id) {
+    public PostDto getPostById(UUID id) {
         return toDto(findPostById(id));
     }
 
@@ -89,7 +90,7 @@ public class PostService {
     }
 
     @Transactional
-    public PostDto vote(Long postId, VoteRequest request) {
+    public PostDto vote(UUID postId, VoteRequest request) {
         Post post = findPostById(postId);
         User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
@@ -121,7 +122,7 @@ public class PostService {
     }
 
     @Transactional
-    public void deletePost(Long postId, Long requestingUserId) {
+    public void deletePost(UUID postId, UUID requestingUserId) {
         Post post = findPostById(postId);
         User owner = post.getOwner();
 
@@ -142,7 +143,7 @@ public class PostService {
         logManager.log("Delete post success! User with id " + requestingUserId + " deleted post with id " + postId);
     }
 
-    Post findPostById(Long id) {
+    Post findPostById(UUID id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
     }

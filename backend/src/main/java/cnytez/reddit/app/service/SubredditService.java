@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class SubredditService {
                 .toList();
     }
 
-    public SubredditDto getSubredditById(Long id) {
+    public SubredditDto getSubredditById(UUID id) {
         return toDto(findSubredditById(id));
     }
 
@@ -64,7 +65,7 @@ public class SubredditService {
     }
 
     @Transactional
-    public SubredditDto joinSubreddit(Long subredditId, Long userId) {
+    public SubredditDto joinSubreddit(UUID subredditId, UUID userId) {
         Subreddit subreddit = findSubredditById(subredditId);
         User user = userRepository.findByIdAndDeletionDateIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -75,7 +76,7 @@ public class SubredditService {
     }
 
     @Transactional
-    public SubredditDto leaveSubreddit(Long subredditId, Long userId) {
+    public SubredditDto leaveSubreddit(UUID subredditId, UUID userId) {
         Subreddit subreddit = findSubredditById(subredditId);
         User user = userRepository.findByIdAndDeletionDateIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -89,7 +90,7 @@ public class SubredditService {
         return toDto(subredditRepository.save(subreddit));
     }
 
-    Subreddit findSubredditById(Long id) {
+    Subreddit findSubredditById(UUID id) {
         return subredditRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + id));
     }

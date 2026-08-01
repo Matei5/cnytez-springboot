@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -20,25 +21,25 @@ public class CommentController {
 
     // GET /api/comments/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<CommentDto> getCommentById(@PathVariable Long id) {
+    public ResponseEntity<CommentDto> getCommentById(@PathVariable UUID id) {
         return ResponseEntity.ok(commentService.getCommentById(id));
     }
 
     // GET /api/comments/by-post/{postId} top-level comments only
     @GetMapping("/by-post/{postId}")
-    public ResponseEntity<List<CommentDto>> getCommentsByPost(@PathVariable Long postId) {
+    public ResponseEntity<List<CommentDto>> getCommentsByPost(@PathVariable UUID postId) {
         return ResponseEntity.ok(commentService.getCommentsByPost(postId));
     }
 
     // GET /api/comments/{id}/replies
     @GetMapping("/{id}/replies")
-    public ResponseEntity<List<CommentDto>> getReplies(@PathVariable Long id) {
+    public ResponseEntity<List<CommentDto>> getReplies(@PathVariable UUID id) {
         return ResponseEntity.ok(commentService.getReplies(id));
     }
 
     // GET /api/comments/by-user/{userId}
     @GetMapping("/by-user/{userId}")
-    public ResponseEntity<List<CommentDto>> getCommentsByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<CommentDto>> getCommentsByUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(commentService.getCommentsByUser(userId));
     }
 
@@ -50,14 +51,14 @@ public class CommentController {
 
     // POST /api/comments/{id}/vote
     @PostMapping("/{id}/vote")
-    public ResponseEntity<CommentDto> vote(@PathVariable Long id, @RequestBody VoteRequest request) {
+    public ResponseEntity<CommentDto> vote(@PathVariable UUID id, @RequestBody VoteRequest request) {
         return ResponseEntity.ok(commentService.vote(id, request));
     }
 
     // DELETE /api/comments/{id}?requestingUserId={userId}
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long id,
-                                              @RequestParam Long requestingUserId) {
+    public ResponseEntity<Void> deleteComment(@PathVariable UUID id,
+                                              @RequestParam UUID requestingUserId) {
         commentService.deleteComment(id, requestingUserId);
         return ResponseEntity.noContent().build();
     }

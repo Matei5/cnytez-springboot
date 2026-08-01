@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/subreddits")
@@ -25,7 +26,7 @@ public class SubredditController {
 
     // GET /api/subreddits/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<SubredditDto> getSubredditById(@PathVariable Long id) {
+    public ResponseEntity<SubredditDto> getSubredditById(@PathVariable UUID id) {
         return ResponseEntity.ok(subredditService.getSubredditById(id));
     }
 
@@ -43,15 +44,15 @@ public class SubredditController {
 
     // POST /api/subreddits/{id}/join?userId={userId}
     @PostMapping("/{id}/join")
-    public ResponseEntity<SubredditDto> joinSubreddit(@PathVariable Long id,
-                                                      @RequestParam Long userId) {
+    public ResponseEntity<SubredditDto> joinSubreddit(@PathVariable UUID id,
+                                                      @RequestParam UUID userId) {
         return ResponseEntity.ok(subredditService.joinSubreddit(id, userId));
     }
 
     // DELETE /api/subreddits/{id}/leave?userId={userId}
     @DeleteMapping("/{id}/leave")
-    public ResponseEntity<SubredditDto> leaveSubreddit(@PathVariable Long id,
-                                                       @RequestParam Long userId) {
+    public ResponseEntity<SubredditDto> leaveSubreddit(@PathVariable UUID id,
+                                                       @RequestParam UUID userId) {
         return ResponseEntity.ok(subredditService.leaveSubreddit(id, userId));
     }
 }

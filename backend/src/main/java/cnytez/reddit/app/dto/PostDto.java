@@ -1,16 +1,17 @@
 package cnytez.reddit.app.dto;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record PostDto(
-        Long id,
+        UUID id,
         String title,
         String content,
         String imageUrl,
         LocalDateTime createdAt,
-        Long ownerId,
+        UUID ownerId,
         String author,
-        Long subredditId,
+        UUID subredditId,
         String subreddit,
         int score,
         int upvotes,
