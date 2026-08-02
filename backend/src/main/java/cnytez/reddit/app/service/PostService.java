@@ -43,10 +43,15 @@ public class PostService {
                 .toList();
     }
 
-    public List<PostDto> getPostsBySubreddit(UUID subredditId) {
-        Subreddit subreddit = subredditRepository.findById(subredditId)
-                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + subredditId));
-        return postRepository.findBySubredditOrderByCreationDateDesc(subreddit).stream()
+    public List<PostDto> getPostsBySubreddit(String subredditName) {
+        Subreddit subreddit = subredditRepository.findByName(subredditName)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Subreddit not found: " + subredditName
+                ));
+
+        return postRepository
+                .findBySubredditOrderByCreationDateDesc(subreddit)
+                .stream()
                 .map(this::toDto)
                 .toList();
     }

@@ -26,8 +26,17 @@ public class PostController {
 
     // GET /api/posts
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts() {
-        List<PostDto> posts = postService.getAllPosts();
+    public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts(
+            @RequestParam(required = false) String subreddit
+    ) {
+        List<PostDto> posts;
+
+        if (subreddit == null || subreddit.isBlank()) {
+            posts = postService.getAllPosts();
+        } else {
+            posts = postService.getPostsBySubreddit(subreddit);
+        }
+
         ApiResponse<List<PostDto>> response = new ApiResponse<>(true, posts);
 
         return ResponseEntity.ok(response);
@@ -42,11 +51,7 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/posts/by-subreddit/{subredditId}
-    @GetMapping("/by-subreddit/{subredditId}")
-    public ResponseEntity<List<PostDto>> getPostsBySubreddit(@PathVariable UUID subredditId) {
-        return ResponseEntity.ok(postService.getPostsBySubreddit(subredditId));
-    }
+
 
     // GET /api/posts/by-user/{userId}
     @GetMapping("/by-user/{userId}")
