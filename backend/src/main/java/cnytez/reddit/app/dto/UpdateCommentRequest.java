@@ -3,19 +3,12 @@ package cnytez.reddit.app.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.UUID;
-
-public record CreateCommentRequest(
+public record UpdateCommentRequest(
         @NotBlank(message = "Content is required.")
         @Size(
                 max = 1000,
                 message = "Content must contain at most 1000 characters."
         )
-        String content,
-
-        @NotBlank(message = "Author is required.")
-        String author,
-
-        UUID parentId
+        String content
 ) {
 }

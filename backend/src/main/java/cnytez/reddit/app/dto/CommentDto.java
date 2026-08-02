@@ -1,20 +1,22 @@
+
 package cnytez.reddit.app.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record CommentDto(
         UUID id,
-        String title,
-        String text,
-        String image,
-        LocalDateTime createdAt,
-        UUID ownerId,
-        String ownerUsername,
         UUID postId,
-        UUID parentCommentId,   // null for top-level comments
-        int score,
+        UUID parentId,
+        String content,
+        String author,
         int upvotes,
         int downvotes,
-        int replyCount
-) {}
+        int score,
+        String userVote,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        List<CommentDto> replies
+) {
+}

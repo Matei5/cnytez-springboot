@@ -20,15 +20,15 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String title;
 
     @Column(columnDefinition = "TEXT")
     private String text;
 
-    private String image;
 
     @Column(nullable = false)
     private LocalDateTime creationDate;
+
+    private LocalDateTime updatedAt;
 
     private LocalDateTime deletionDate;
 
