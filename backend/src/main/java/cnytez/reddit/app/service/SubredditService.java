@@ -2,11 +2,13 @@ package cnytez.reddit.app.service;
 
 import cnytez.reddit.app.dto.CreateSubredditRequest;
 import cnytez.reddit.app.dto.SubredditDto;
+import cnytez.reddit.app.dto.UpdateSubredditRequest;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.Subreddit;
 import cnytez.reddit.app.model.User;
+import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.SubredditRepository;
 import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,15 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SubredditService {
 
+    private static final String CURRENT_USERNAME = "current_user";
     private final SubredditRepository subredditRepository;
     private final UserRepository userRepository;
+    private final PostRepository postRepository;
     private final LogManager logManager;
+
 
     public List<SubredditDto> getAllSubreddits() {
         return subredditRepository.findAll().stream()
@@ -31,80 +35,137 @@ public class SubredditService {
                 .toList();
     }
 
-    public SubredditDto getSubredditById(UUID id) {
-        return toDto(findSubredditById(id));
+    public SubredditDto getSubredditByName(String name) {
+        return toDto(findSubredditByName(name));
     }
 
-    public SubredditDto getSubredditByName(String name) {
-        return toDto(subredditRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found: r/" + name)));
-    }
 
     @Transactional
-    public SubredditDto createSubreddit(CreateSubredditRequest request) {
+    public SubredditDto createSubreddit(
+            CreateSubredditRequest request
+    ) {
         if (subredditRepository.existsByName(request.name())) {
-            throw new BadRequestException("Subreddit r/" + request.name() + " already exists.");
+            throw new BadRequestException(
+                    "Subreddit " + request.name() + " already exists."
+            );
         }
 
-        User owner = userRepository.findById(request.ownerId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.ownerId()));
+        User owner = getCurrentUser();
 
         Subreddit subreddit = Subreddit.builder()
                 .name(request.name())
-                .photo(request.photo())
-                .banner(request.banner())
+                .displayName(request.displayName())
+                .description(request.description())
+                .iconUrl(request.iconUrl())
                 .owner(owner)
                 .creationDate(LocalDateTime.now())
                 .build();
 
-        // Owner automatically becomes a member
         subreddit.addMember(owner);
-        logManager.log("Create subreddit success! User with id " + owner.getId() +
-                " created subreddit with name " + subreddit.getName());
-        return toDto(subredditRepository.save(subreddit));
+
+        Subreddit savedSubreddit =
+                subredditRepository.save(subreddit);
+
+        logManager.log(
+                "Create subreddit success! User with id "
+                        + owner.getId()
+                        + " created subreddit "
+                        + savedSubreddit.getName()
+        );
+
+        return toDto(savedSubreddit);
     }
 
     @Transactional
-    public SubredditDto joinSubreddit(UUID subredditId, UUID userId) {
-        Subreddit subreddit = findSubredditById(subredditId);
-        User user = userRepository.findByIdAndDeletionDateIsNull(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public SubredditDto updateSubreddit(
+            String name,
+            UpdateSubredditRequest request
+    ) {
+        Subreddit subreddit = findSubredditByName(name);
+        User currentUser = getCurrentUser();
 
-        subreddit.addMember(user);
-        logManager.log("Join subreddit success! User with id " + userId + " joined subreddit with id " + subredditId);
-        return toDto(subredditRepository.save(subreddit));
-    }
-
-    @Transactional
-    public SubredditDto leaveSubreddit(UUID subredditId, UUID userId) {
-        Subreddit subreddit = findSubredditById(subredditId);
-        User user = userRepository.findByIdAndDeletionDateIsNull(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
-        if (subreddit.getOwner().getId().equals(userId)) {
-            throw new BadRequestException("The owner cannot leave their own subreddit.");
+        if (!subreddit.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the subreddit owner can update it."
+            );
         }
 
-        subreddit.removeMember(user);
-        logManager.log("Leave subreddit success! The user with id " + userId + " left subreddit with id " + subredditId);
-        return toDto(subredditRepository.save(subreddit));
+        if (request.displayName() != null) {
+            subreddit.setDisplayName(request.displayName());
+        }
+
+        if (request.description() != null) {
+            subreddit.setDescription(request.description());
+        }
+
+        if (request.iconUrl() != null) {
+            subreddit.setIconUrl(request.iconUrl());
+        }
+
+        Subreddit savedSubreddit =
+                subredditRepository.save(subreddit);
+
+        return toDto(savedSubreddit);
     }
 
-    Subreddit findSubredditById(UUID id) {
-        return subredditRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + id));
+    @Transactional
+    public void deleteSubreddit(String name) {
+        Subreddit subreddit = findSubredditByName(name);
+        User currentUser = getCurrentUser();
+
+        if (!subreddit.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the subreddit owner can delete it."
+            );
+        }
+
+        long postCount =
+                postRepository.countBySubreddit(subreddit);
+
+        if (postCount > 0) {
+            throw new BadRequestException(
+                    "A subreddit with posts cannot be deleted."
+            );
+        }
+
+        subredditRepository.delete(subreddit);
+
+        logManager.log(
+                "Delete subreddit success! User with id "
+                        + currentUser.getId()
+                        + " deleted subreddit "
+                        + name
+        );
     }
 
-    private SubredditDto toDto(Subreddit s) {
+    private User getCurrentUser() {
+        return userRepository
+                .findByUsernameAndDeletionDateIsNull(CURRENT_USERNAME)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found: " + CURRENT_USERNAME
+                ));
+    }
+
+    private Subreddit findSubredditByName(String name) {
+        return subredditRepository.findByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Subreddit not found: " + name
+                ));
+    }
+
+    private SubredditDto toDto(Subreddit subreddit) {
+        long postCount =
+                postRepository.countBySubreddit(subreddit);
+
         return new SubredditDto(
-                s.getId(),
-                s.getName(),
-                s.getPhoto(),
-                s.getBanner(),
-                s.getOwner().getId(),
-                s.getOwner().getUsername(),
-                s.getCreationDate(),
-                s.getMembers().size()
+                subreddit.getId(),
+                subreddit.getName(),
+                subreddit.getDisplayName(),
+                subreddit.getDescription(),
+                subreddit.getMembers().size(),
+                postCount,
+                subreddit.getIconUrl(),
+                subreddit.getCreationDate()
         );
     }
 }

@@ -10,6 +10,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import cnytez.reddit.app.dto.ApiListResponse;
+import cnytez.reddit.app.dto.ApiResponse;
+import cnytez.reddit.app.dto.PostDto;
+import cnytez.reddit.app.service.PostService;
+import cnytez.reddit.app.dto.ApiMessageResponse;
+import cnytez.reddit.app.dto.UpdateSubredditRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/subreddits")
@@ -17,42 +24,93 @@ import java.util.UUID;
 public class SubredditController {
 
     private final SubredditService subredditService;
+    private final PostService postService;
 
-    // GET /api/subreddits
     @GetMapping
-    public ResponseEntity<List<SubredditDto>> getAllSubreddits() {
-        return ResponseEntity.ok(subredditService.getAllSubreddits());
+    public ResponseEntity<ApiListResponse<SubredditDto>> getAllSubreddits() {
+        List<SubredditDto> subreddits =
+                subredditService.getAllSubreddits();
+
+        ApiListResponse<SubredditDto> response =
+                new ApiListResponse<>(
+                        true,
+                        subreddits,
+                        subreddits.size()
+                );
+
+        return ResponseEntity.ok(response);
     }
 
-    // GET /api/subreddits/{id}
-    @GetMapping("/{id}")
-    public ResponseEntity<SubredditDto> getSubredditById(@PathVariable UUID id) {
-        return ResponseEntity.ok(subredditService.getSubredditById(id));
+
+    @GetMapping("/{name}")
+    public ResponseEntity<ApiResponse<SubredditDto>> getSubredditByName(
+            @PathVariable String name
+    ) {
+        SubredditDto subreddit =
+                subredditService.getSubredditByName(name);
+
+        ApiResponse<SubredditDto> response =
+                new ApiResponse<>(true, subreddit);
+
+        return ResponseEntity.ok(response);
     }
 
-    // GET /api/subreddits/by-name/{name}
-    @GetMapping("/by-name/{name}")
-    public ResponseEntity<SubredditDto> getSubredditByName(@PathVariable String name) {
-        return ResponseEntity.ok(subredditService.getSubredditByName(name));
+    @GetMapping("/{name}/posts")
+    public ResponseEntity<ApiResponse<List<PostDto>>> getSubredditPosts(
+            @PathVariable String name
+    ) {
+        List<PostDto> posts =
+                postService.getPostsBySubreddit(name);
+
+        ApiResponse<List<PostDto>> response =
+                new ApiResponse<>(true, posts);
+
+        return ResponseEntity.ok(response);
     }
 
-    // POST /api/subreddits
+
+
     @PostMapping
-    public ResponseEntity<SubredditDto> createSubreddit(@RequestBody CreateSubredditRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(subredditService.createSubreddit(request));
+    public ResponseEntity<ApiResponse<SubredditDto>> createSubreddit(
+            @Valid @RequestBody CreateSubredditRequest request
+    ) {
+        SubredditDto subreddit =
+                subredditService.createSubreddit(request);
+
+        ApiResponse<SubredditDto> response =
+                new ApiResponse<>(true, subreddit);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
-    // POST /api/subreddits/{id}/join?userId={userId}
-    @PostMapping("/{id}/join")
-    public ResponseEntity<SubredditDto> joinSubreddit(@PathVariable UUID id,
-                                                      @RequestParam UUID userId) {
-        return ResponseEntity.ok(subredditService.joinSubreddit(id, userId));
+    @PutMapping("/{name}")
+    public ResponseEntity<ApiResponse<SubredditDto>> updateSubreddit(
+            @PathVariable String name,
+            @Valid @RequestBody UpdateSubredditRequest request
+    ) {
+        SubredditDto subreddit =
+                subredditService.updateSubreddit(name, request);
+
+        ApiResponse<SubredditDto> response =
+                new ApiResponse<>(true, subreddit);
+
+        return ResponseEntity.ok(response);
     }
 
-    // DELETE /api/subreddits/{id}/leave?userId={userId}
-    @DeleteMapping("/{id}/leave")
-    public ResponseEntity<SubredditDto> leaveSubreddit(@PathVariable UUID id,
-                                                       @RequestParam UUID userId) {
-        return ResponseEntity.ok(subredditService.leaveSubreddit(id, userId));
+    @DeleteMapping("/{name}")
+    public ResponseEntity<ApiMessageResponse> deleteSubreddit(
+            @PathVariable String name
+    ) {
+        subredditService.deleteSubreddit(name);
+
+        ApiMessageResponse response = new ApiMessageResponse(
+                true,
+                "The subreddit was deleted successfully."
+        );
+
+        return ResponseEntity.ok(response);
     }
+
 }

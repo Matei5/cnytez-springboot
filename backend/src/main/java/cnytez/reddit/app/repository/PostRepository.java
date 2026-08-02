@@ -20,4 +20,6 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     List<Post> findAllByOrderByCreationDateDesc();
 
+    long countBySubreddit(Subreddit subreddit);
+
 }

@@ -23,8 +23,13 @@ public class Subreddit {
     @Column(unique = true, nullable = false)
     private String name;
 
-    private String photo;
-    private String banner;
+    @Column(nullable = false)
+    private String displayName;
+
+    @Column(length = 500, nullable = false)
+    private String description;
+
+    private String iconUrl;
 
     @Column(nullable = false)
     private LocalDateTime creationDate;
