@@ -9,6 +9,7 @@ public record PostDto(
         String content,
         String imageUrl,
         LocalDateTime createdAt,
+        LocalDateTime updatedAt,
         UUID ownerId,
         String author,
         UUID subredditId,
@@ -16,5 +17,6 @@ public record PostDto(
         int score,
         int upvotes,
         int downvotes,
+        String userVote,
         int commentCount
 ) {}

@@ -1,5 +1,6 @@
 package cnytez.reddit.app.service;
 
+import cnytez.reddit.app.dto.UpdatePostRequest;
 import cnytez.reddit.app.dto.CreatePostRequest;
 import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.VoteRequest;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PostService {
 
+    private static final String CURRENT_USERNAME = "current_user";
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
     private final CommentRepository commentRepository;
@@ -74,6 +76,7 @@ public class PostService {
                 .owner(owner)
                 .subreddit(subreddit)
                 .creationDate(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -89,6 +92,34 @@ public class PostService {
         return toDto(savedPost);
     }
 
+    @Transactional
+    public PostDto updatePost(UUID postId, UpdatePostRequest request) {
+        Post post = findPostById(postId);
+        User currentUser = getCurrentUser();
+
+        if (post.getDeletionDate() != null) {
+            throw new BadRequestException("Deleted posts cannot be edited.");
+        }
+
+        if (!post.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the post author can edit this post."
+            );
+        }
+
+        if (request.title() != null) {
+            post.setTitle(request.title());
+        }
+
+        if (request.content() != null) {
+            post.setText(request.content());
+        }
+
+        post.setUpdatedAt(LocalDateTime.now());
+
+        Post savedPost = postRepository.save(post);
+        return toDto(savedPost);
+    }
     @Transactional
     public PostDto vote(UUID postId, VoteRequest request) {
         Post post = findPostById(postId);
@@ -122,25 +153,34 @@ public class PostService {
     }
 
     @Transactional
-    public void deletePost(UUID postId, UUID requestingUserId) {
+    public void deletePost(UUID postId) {
         Post post = findPostById(postId);
-        User owner = post.getOwner();
+        User currentUser = getCurrentUser();
 
-        if (owner.getDeletionDate() != null) {
-            throw new BadRequestException("Only the post author can delete this post.");
+        if (post.getDeletionDate() != null) {
+            throw new BadRequestException("Post is already deleted.");
         }
-        if (!owner.getId().equals(requestingUserId)) {
-            throw new BadRequestException("Only the post author can delete this post.");
+
+        if (!post.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the post author can delete this post."
+            );
         }
 
         post.setTitle("[deleted by user]");
         post.setText(null);
         post.setImage(null);
-
         post.setDeletionDate(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
 
         postRepository.save(post);
-        logManager.log("Delete post success! User with id " + requestingUserId + " deleted post with id " + postId);
+
+        logManager.log(
+                "Delete post success! User with id "
+                        + currentUser.getId()
+                        + " deleted post with id "
+                        + postId
+        );
     }
 
     Post findPostById(UUID id) {
@@ -148,16 +188,38 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
     }
 
+
+    private User getCurrentUser() {
+        return userRepository
+                .findByUsernameAndDeletionDateIsNull(CURRENT_USERNAME)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found: " + CURRENT_USERNAME
+                ));
+    }
     private PostDto toDto(Post post) {
         long upvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);
         long downvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
         long commentCount = commentRepository.countByPost(post);
+
+        User currentUser = getCurrentUser();
+
+        String userVote = postVoteRepository
+                .findByUserAndPost(currentUser, post)
+                .map(vote -> {
+                    if (vote.getVoteType() == VoteType.UPVOTE) {
+                        return "up";
+                    }
+
+                    return "down";
+                })
+                .orElse(null);
         return new PostDto(
                 post.getId(),
                 post.getTitle(),
                 post.getText(),
                 post.getImage(),
                 post.getCreationDate(),
+                post.getUpdatedAt(),
                 post.getOwner().getId(),
                 post.getOwner().getUsername(),
                 post.getSubreddit().getId(),
@@ -165,6 +227,7 @@ public class PostService {
                 (int) (upvotes - downvotes),
                 (int) upvotes,
                 (int) downvotes,
+                userVote,
                 (int) commentCount
         );
     }

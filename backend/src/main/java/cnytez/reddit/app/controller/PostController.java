@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import cnytez.reddit.app.dto.UpdatePostRequest;
+import jakarta.validation.Valid;
+import cnytez.reddit.app.dto.ApiMessageResponse;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -57,6 +60,16 @@ public class PostController {
         ApiResponse<PostDto> response = new ApiResponse<>(true, post);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostDto>> updatePost(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdatePostRequest request
+    ) {
+        PostDto post = postService.updatePost(id, request);
+        ApiResponse<PostDto> response = new ApiResponse<>(true, post);
+
+        return ResponseEntity.ok(response);
+    }
 
     // POST /api/posts/{id}/vote
     @PostMapping("/{id}/vote")
@@ -66,9 +79,13 @@ public class PostController {
 
     // DELETE /api/posts/{id}?requestingUserId={userId}
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable UUID id,
-                                           @RequestParam UUID requestingUserId) {
-        postService.deletePost(id, requestingUserId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiMessageResponse> deletePost(@PathVariable UUID id) {
+        postService.deletePost(id);
+
+        ApiMessageResponse response = new ApiMessageResponse(
+                true,
+                "The post was deleted successfully."
+        );
+        return ResponseEntity.ok(response);
     }
 }

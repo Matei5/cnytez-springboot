@@ -29,6 +29,8 @@ public class Post {
     @Column(nullable = false)
     private LocalDateTime creationDate;
 
+    private LocalDateTime updatedAt;
+
     private LocalDateTime deletionDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
