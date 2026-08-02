@@ -15,6 +15,7 @@ import java.util.UUID;
 import cnytez.reddit.app.dto.UpdatePostRequest;
 import jakarta.validation.Valid;
 import cnytez.reddit.app.dto.ApiMessageResponse;
+import cnytez.reddit.app.dto.VoteResponse;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -71,10 +72,13 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    // POST /api/posts/{id}/vote
-    @PostMapping("/{id}/vote")
-    public ResponseEntity<PostDto> vote(@PathVariable UUID id, @RequestBody VoteRequest request) {
-        return ResponseEntity.ok(postService.vote(id, request));
+
+    @PutMapping("/{id}/vote")
+    public ResponseEntity<ApiResponse<VoteResponse>> vote(@PathVariable UUID id, @RequestBody VoteRequest request) {
+        VoteResponse vote = postService.vote(id, request);
+        ApiResponse<VoteResponse> response = new ApiResponse<>(true, vote);
+
+        return ResponseEntity.ok(response);
     }
 
     // DELETE /api/posts/{id}?requestingUserId={userId}

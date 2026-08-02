@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import cnytez.reddit.app.dto.VoteResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -121,35 +122,49 @@ public class PostService {
         return toDto(savedPost);
     }
     @Transactional
-    public PostDto vote(UUID postId, VoteRequest request) {
+    public VoteResponse vote(UUID postId, VoteRequest request) {
         Post post = findPostById(postId);
-        User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
+        User currentUser = getCurrentUser();
 
-        Optional<PostVote> existingVote = postVoteRepository.findByUserAndPost(user, post);
+        if (post.getDeletionDate() != null) {
+            throw new BadRequestException("Deleted posts cannot be voted.");
+        }
+
+        Optional<PostVote> existingVote =
+                postVoteRepository.findByUserAndPost(currentUser, post);
+
+        if ("none".equalsIgnoreCase(request.voteType())) {
+            existingVote.ifPresent(postVoteRepository::delete);
+            return toVoteResponse(post);
+        }
+
+        VoteType newVoteType;
+
+        if ("up".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.UPVOTE;
+        } else if ("down".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.DOWNVOTE;
+        } else {
+            throw new BadRequestException(
+                    "Vote type must be up, down or none."
+            );
+        }
 
         if (existingVote.isPresent()) {
             PostVote vote = existingVote.get();
-            if (vote.getVoteType() == request.voteType()) {
-                // Same vote = remove it (toggle off)
-                postVoteRepository.delete(vote);
-            } else {
-                // Different vote = switch it
-                vote.setVoteType(request.voteType());
-                postVoteRepository.save(vote);
-            }
+            vote.setVoteType(newVoteType);
+            postVoteRepository.save(vote);
         } else {
             PostVote newVote = PostVote.builder()
-                    .user(user)
+                    .user(currentUser)
                     .post(post)
-                    .voteType(request.voteType())
+                    .voteType(newVoteType)
                     .build();
+
             postVoteRepository.save(newVote);
-            logManager.log("Vote post success! User with id " + user.getId() +
-                    " voted post with id " + postId);
         }
 
-        return toDto(post);
+        return toVoteResponse(post);
     }
 
     @Transactional
@@ -195,6 +210,17 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found: " + CURRENT_USERNAME
                 ));
+    }
+
+    private VoteResponse toVoteResponse(Post post) {
+        PostDto postDto = toDto(post);
+
+        return new VoteResponse(
+                postDto.upvotes(),
+                postDto.downvotes(),
+                postDto.score(),
+                postDto.userVote()
+        );
     }
     private PostDto toDto(Post post) {
         long upvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);

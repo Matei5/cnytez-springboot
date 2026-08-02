@@ -26,6 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CommentService {
 
+    private static final String CURRENT_USERNAME = "current_user";
     private final CommentRepository commentRepository;
     private final CommentVoteRepository commentVoteRepository;
     private final PostRepository postRepository;
@@ -101,35 +102,49 @@ public class CommentService {
                 " created comment with id " + comment.getId());
         return toDto(savedComment);
     }
-
     @Transactional
     public CommentDto vote(UUID commentId, VoteRequest request) {
         Comment comment = findCommentById(commentId);
-        User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
+        User currentUser = getCurrentUser();
 
-        Optional<CommentVote> existingVote = commentVoteRepository.findByUserAndComment(user, comment);
+        if (comment.getDeletionDate() != null) {
+            throw new BadRequestException("Deleted comments cannot be voted.");
+        }
+
+        Optional<CommentVote> existingVote =
+                commentVoteRepository.findByUserAndComment(currentUser, comment);
+
+        if ("none".equalsIgnoreCase(request.voteType())) {
+            existingVote.ifPresent(commentVoteRepository::delete);
+            return toDto(comment);
+        }
+
+        VoteType newVoteType;
+
+        if ("up".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.UPVOTE;
+        } else if ("down".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.DOWNVOTE;
+        } else {
+            throw new BadRequestException(
+                    "Vote type must be up, down or none."
+            );
+        }
 
         if (existingVote.isPresent()) {
             CommentVote vote = existingVote.get();
-            if (vote.getVoteType() == request.voteType()) {
-                // Same vote = remove it (toggle off)
-                commentVoteRepository.delete(vote);
-            } else {
-                // Different vote = switch it
-                vote.setVoteType(request.voteType());
-                commentVoteRepository.save(vote);
-            }
+            vote.setVoteType(newVoteType);
+            commentVoteRepository.save(vote);
         } else {
             CommentVote newVote = CommentVote.builder()
-                    .user(user)
+                    .user(currentUser)
                     .comment(comment)
-                    .voteType(request.voteType())
+                    .voteType(newVoteType)
                     .build();
+
             commentVoteRepository.save(newVote);
         }
-        logManager.log("Vote comment success! User with id " + user.getId() +
-                " voted comment with id " + commentId);
+
         return toDto(comment);
     }
 
@@ -160,7 +175,13 @@ public class CommentService {
         return commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + id));
     }
-
+    private User getCurrentUser() {
+        return userRepository
+                .findByUsernameAndDeletionDateIsNull(CURRENT_USERNAME)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found: " + CURRENT_USERNAME
+                ));
+    }
     private CommentDto toDto(Comment comment) {
         long upvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.UPVOTE);
         long downvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
