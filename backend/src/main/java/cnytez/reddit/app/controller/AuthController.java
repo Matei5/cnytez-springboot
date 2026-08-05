@@ -11,6 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import cnytez.reddit.app.dto.ApiResponse;
 import cnytez.reddit.app.dto.AuthResponse;
+import cnytez.reddit.app.dto.ApiMessageResponse;
+import cnytez.reddit.app.dto.ChangePasswordRequest;
+import cnytez.reddit.app.dto.UpdateProfileRequest;
+import cnytez.reddit.app.dto.UserProfileDto;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -39,4 +43,40 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserProfileDto>> getProfile() {
+        UserProfileDto profile = authService.getProfile();
+        ApiResponse<UserProfileDto> response =
+                new ApiResponse<>(true, profile);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<UserProfileDto>> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        UserProfileDto profile = authService.updateProfile(request);
+        ApiResponse<UserProfileDto> response =
+                new ApiResponse<>(true, profile);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<ApiMessageResponse> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        authService.changePassword(request);
+
+        ApiMessageResponse response = new ApiMessageResponse(
+                true,
+                "Password changed successfully"
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+
 }

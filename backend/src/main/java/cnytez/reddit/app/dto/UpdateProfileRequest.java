@@ -1,8 +1,14 @@
 package cnytez.reddit.app.dto;
 
+import jakarta.validation.constraints.Pattern;
+
 public record UpdateProfileRequest(
-        String name,
-        String username,
-        String email,
-        String profilePhoto
-) {}
+        String displayName,
+
+        @Pattern(
+                regexp = "^https?://.+$",
+                message = "Avatar URL must use HTTP or HTTPS."
+        )
+        String avatarUrl
+) {
+}

@@ -12,6 +12,10 @@ import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import cnytez.reddit.app.dto.ChangePasswordRequest;
+import cnytez.reddit.app.dto.UpdateProfileRequest;
+import cnytez.reddit.app.dto.UserProfileDto;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +25,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final LogManager logManager;
     private final JwtService jwtService;
+    private final CurrentUserService currentUserService;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
@@ -57,6 +62,68 @@ public class AuthService {
         return toAuthResponse(user, token);
     }
 
+    public UserProfileDto getProfile() {
+        User user = currentUserService.getCurrentUser();
+        return toProfileDto(user);
+    }
+
+    @Transactional
+    public UserProfileDto updateProfile(UpdateProfileRequest request) {
+        User user = currentUserService.getCurrentUser();
+
+        if (request.displayName() != null) {
+            user.setName(request.displayName());
+        }
+
+        if (request.avatarUrl() != null) {
+            user.setProfilePhoto(request.avatarUrl());
+        }
+
+        User savedUser = userRepository.save(user);
+
+        logManager.log(
+                "Update profile success! User with id "
+                        + user.getId()
+                        + " updated profile"
+        );
+
+        return toProfileDto(savedUser);
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordRequest request) {
+        User user = currentUserService.getCurrentUser();
+
+        if (!passwordEncoder.matches(
+                request.currentPassword(),
+                user.getPassword()
+        )) {
+            throw new BadRequestException(
+                    "Current password is incorrect."
+            );
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(request.newPassword())
+        );
+
+        userRepository.save(user);
+
+        logManager.log(
+                "Password change success! User with id "
+                        + user.getId()
+                        + " changed password"
+        );
+    }
+
+    private UserProfileDto toProfileDto(User user) {
+        return new UserProfileDto(
+                user.getUsername(),
+                user.getEmail(),
+                user.getName(),
+                user.getProfilePhoto()
+        );
+    }
     private AuthResponse toAuthResponse(User user, String token) {
         AuthUserDto userDto = new AuthUserDto(
                 user.getUsername(),
