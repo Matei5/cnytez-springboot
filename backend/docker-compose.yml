@@ -1,0 +1,29 @@
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # overrides the application's environment variables, making backend connect to 'db'
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/cnytez_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cnytez_db
+    ports:
+      - "5432:5432"
+    volumes:
+      # data is saved on volume so that database information isn't lost after stop
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
