@@ -4,8 +4,7 @@ import cnytez.reddit.app.dto.UpdatePostRequest;
 import cnytez.reddit.app.dto.CreatePostRequest;
 import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.VoteRequest;
-import cnytez.reddit.app.exception.BadRequestException;
-import cnytez.reddit.app.exception.ResourceNotFoundException;
+import cnytez.reddit.app.exception.*;
 import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.*;
 import cnytez.reddit.app.repository.CommentRepository;
@@ -69,8 +68,10 @@ public class PostService {
         if (request.image() != null) {
             try {
                 imageUrl = imageUploadService.sendImageToServer(request.image(), request.filter());
-            } catch (Exception e) {
-                imageUrl = null;
+            } catch (IllegalArgumentException | RejectedFileException e) {
+                throw new BadRequestException("Failed to process the image: " + e.getMessage());
+            } catch (ImageServerFailureException e) {
+                throw new InternalServerErrorException("Failed to process the image: " + e.getMessage());
             }
         }
 

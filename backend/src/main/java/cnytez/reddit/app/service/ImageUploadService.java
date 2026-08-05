@@ -1,5 +1,7 @@
 package cnytez.reddit.app.service;
 
+import cnytez.reddit.app.exception.ImageServerFailureException;
+import cnytez.reddit.app.exception.RejectedFileException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -36,11 +38,11 @@ public class ImageUploadService {
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
                     String errorBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
-                    throw new RuntimeException("Invalid request: " + response.getStatusCode() + " "+ errorBody);
+                    throw new RejectedFileException("Invalid file: " + response.getStatusCode() + " "+ errorBody);
                 })
                 .onStatus(HttpStatusCode::is5xxServerError, ((request, response) -> {
                     String errorBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
-                    throw new RuntimeException("Internal server issue: " + response.getStatusCode() + " " + errorBody);
+                    throw new ImageServerFailureException("Internal server issue: " + response.getStatusCode() + " " + errorBody);
                 }))
                 .body(String.class);
     }
