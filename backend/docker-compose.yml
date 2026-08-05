@@ -16,6 +16,7 @@ services:
       # password is loaded from .env file, never hardcoded
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET}
     # wait for db to be ready before starting, not just running
     depends_on:
       db:
