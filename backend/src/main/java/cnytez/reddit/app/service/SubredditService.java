@@ -10,7 +10,6 @@ import cnytez.reddit.app.model.Subreddit;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.SubredditRepository;
-import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +21,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SubredditService {
 
-    private static final String CURRENT_USERNAME = "current_user";
     private final SubredditRepository subredditRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
     private final PostRepository postRepository;
     private final LogManager logManager;
 
@@ -50,7 +48,7 @@ public class SubredditService {
             );
         }
 
-        User owner = getCurrentUser();
+        User owner = currentUserService.getCurrentUser();
 
         Subreddit subreddit = Subreddit.builder()
                 .name(request.name())
@@ -82,7 +80,7 @@ public class SubredditService {
             UpdateSubredditRequest request
     ) {
         Subreddit subreddit = findSubredditByName(name);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (!subreddit.getOwner().getId().equals(currentUser.getId())) {
             throw new BadRequestException(
@@ -111,7 +109,7 @@ public class SubredditService {
     @Transactional
     public void deleteSubreddit(String name) {
         Subreddit subreddit = findSubredditByName(name);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (!subreddit.getOwner().getId().equals(currentUser.getId())) {
             throw new BadRequestException(
@@ -138,13 +136,6 @@ public class SubredditService {
         );
     }
 
-    private User getCurrentUser() {
-        return userRepository
-                .findByUsernameAndDeletionDateIsNull(CURRENT_USERNAME)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found: " + CURRENT_USERNAME
-                ));
-    }
 
     private Subreddit findSubredditByName(String name) {
         return subredditRepository.findByName(name)

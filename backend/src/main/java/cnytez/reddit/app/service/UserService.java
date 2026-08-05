@@ -45,17 +45,13 @@ public class UserService {
         User user = userRepository.findByIdAndDeletionDateIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        if (request.username() != null && !request.username().equals(user.getUsername())) {
-            if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
-                throw new BadRequestException("Username '" + request.username() + "' is already taken.");
-            }
-            user.setUsername(request.username());
+
+        if (request.displayName() != null) {
+            user.setName(request.displayName());
         }
-        if (request.name() != null) {
-            user.setName(request.name());
-        }
-        if (request.profilePhoto() != null) {
-            user.setProfilePhoto(request.profilePhoto());
+
+        if (request.avatarUrl() != null) {
+            user.setProfilePhoto(request.avatarUrl());
         }
 
         logManager.log("Update profile success! User with id " + id + " updated");

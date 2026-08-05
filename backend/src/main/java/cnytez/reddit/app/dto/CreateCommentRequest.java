@@ -13,9 +13,6 @@ public record CreateCommentRequest(
         )
         String content,
 
-        @NotBlank(message = "Author is required.")
-        String author,
-
         UUID parentId
 ) {
 }

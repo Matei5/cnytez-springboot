@@ -26,6 +26,8 @@ public class Post {
 
     private String image;
 
+    private Integer filter;
+
     @Column(nullable = false)
     private LocalDateTime creationDate;
 

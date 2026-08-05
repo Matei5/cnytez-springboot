@@ -24,12 +24,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CommentService {
 
-    private static final String CURRENT_USERNAME = "current_user";
     private final CommentRepository commentRepository;
     private final CommentVoteRepository commentVoteRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final LogManager logManager;
+    private final CurrentUserService currentUserService;
 
     public List<CommentDto> getCommentsByPost(UUID postId) {
         Post post = postRepository.findById(postId)
@@ -51,11 +51,7 @@ public class CommentService {
             UUID postId,
             CreateCommentRequest request
     ) {
-        User owner = userRepository
-                .findByUsernameAndDeletionDateIsNull(request.author())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found: " + request.author()
-                ));
+        User owner = currentUserService.getCurrentUser();
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -119,7 +115,7 @@ public class CommentService {
     @Transactional
     public VoteResponse vote(UUID commentId, VoteRequest request) {
         Comment comment = findCommentById(commentId);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (comment.getDeletionDate() != null) {
             throw new BadRequestException("Deleted comments cannot be voted.");
@@ -164,7 +160,7 @@ public class CommentService {
     @Transactional
     public void deleteComment(UUID commentId) {
         Comment comment = findCommentById(commentId);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (comment.getDeletionDate() != null) {
             throw new BadRequestException(
@@ -200,7 +196,7 @@ public class CommentService {
             UpdateCommentRequest request
     ) {
         Comment comment = findCommentById(commentId);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (comment.getDeletionDate() != null) {
             throw new BadRequestException(
@@ -229,13 +225,7 @@ public class CommentService {
         return commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + id));
     }
-    private User getCurrentUser() {
-        return userRepository
-                .findByUsernameAndDeletionDateIsNull(CURRENT_USERNAME)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found: " + CURRENT_USERNAME
-                ));
-    }
+
 
     private VoteResponse toVoteResponse(Comment comment) {
         CommentDto commentDto = toDto(comment);
@@ -255,10 +245,11 @@ public class CommentService {
         long downvotes = commentVoteRepository
                 .countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
 
-        User currentUser = getCurrentUser();
-
-        String userVote = commentVoteRepository
-                .findByUserAndComment(currentUser, comment)
+        String userVote = currentUserService
+                .findCurrentUser()
+                .flatMap(user ->
+                        commentVoteRepository.findByUserAndComment(user, comment)
+                )
                 .map(vote -> {
                     if (vote.getVoteType() == VoteType.UPVOTE) {
                         return "up";

@@ -19,7 +19,7 @@ import cnytez.reddit.app.dto.UpdateSubredditRequest;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/subreddits")
+@RequestMapping("/subreddits")
 @RequiredArgsConstructor
 public class SubredditController {
 

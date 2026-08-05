@@ -13,7 +13,6 @@ import java.util.UUID;
 
 
 @RestController
-@RequestMapping("/api")
 @RequiredArgsConstructor
 public class CommentController {
 

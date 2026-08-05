@@ -1,0 +1,53 @@
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reddit-backend
+    # restart automatically after EC2 reboots or crashes
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # overrides the application's environment variables, making backend connect to 'db'
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/cnytez_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      # password is loaded from .env file, never hardcoded
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET}
+    # wait for db to be ready before starting, not just running
+    depends_on:
+      db:
+        condition: service_healthy
+    # prevent Docker logs from filling up EC2 disk
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: postgres:15-alpine
+    container_name: reddit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: cnytez_db
+    volumes:
+      # data is saved on volume so that database information isn't lost after stop
+      - postgres_data:/var/lib/postgresql/data
+    # checks that Postgres is accepting connections before marking service as healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cnytez_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:

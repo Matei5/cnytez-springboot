@@ -8,15 +8,15 @@ public record PostDto(
         String title,
         String content,
         String imageUrl,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt,
-        UUID ownerId,
+        Integer filter,
         String author,
-        UUID subredditId,
         String subreddit,
-        int score,
         int upvotes,
         int downvotes,
+        int score,
+        int commentCount,
         String userVote,
-        int commentCount
-) {}
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+) {
+}

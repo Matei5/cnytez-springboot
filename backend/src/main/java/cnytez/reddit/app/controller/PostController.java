@@ -7,6 +7,7 @@ import cnytez.reddit.app.dto.VoteRequest;
 import cnytez.reddit.app.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ import cnytez.reddit.app.dto.ApiMessageResponse;
 import cnytez.reddit.app.dto.VoteResponse;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/posts")
 @RequiredArgsConstructor
 public class PostController {
 
@@ -53,18 +54,17 @@ public class PostController {
 
 
 
-    // GET /api/posts/by-user/{userId}
-    @GetMapping("/by-user/{userId}")
-    public ResponseEntity<List<PostDto>> getPostsByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(postService.getPostsByUser(userId));
-    }
-
-    // POST /api/posts
-    @PostMapping
-    public ResponseEntity<ApiResponse<PostDto>> createPost(@RequestBody CreatePostRequest request) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<PostDto>> createPost(
+            @Valid @ModelAttribute CreatePostRequest request
+    ) {
         PostDto post = postService.createPost(request);
-        ApiResponse<PostDto> response = new ApiResponse<>(true, post);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        ApiResponse<PostDto> response =
+                new ApiResponse<>(true, post);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PostDto>> updatePost(
