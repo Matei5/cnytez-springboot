@@ -34,6 +34,7 @@ public class PostService {
     private final SubredditRepository subredditRepository;
     private final LogManager logManager;
     private final CurrentUserService currentUserService;
+    private final ImageUploadService imageUploadService;
 
     public List<PostDto> getAllPosts() {
         return postRepository.findAllByOrderByCreationDateDesc().stream()
@@ -64,10 +65,19 @@ public class PostService {
         Subreddit subreddit = subredditRepository.findByName(request.subreddit())
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with name: " + request.subreddit()));
 
+        String imageUrl = null;
+        if (request.image() != null) {
+            try {
+                imageUrl = imageUploadService.sendImageToServer(request.image(), request.filter());
+            } catch (Exception e) {
+                imageUrl = null;
+            }
+        }
+
         Post post = Post.builder()
                 .title(request.title())
                 .text(request.content())
-                .image(null)
+                .image(imageUrl)
                 .owner(owner)
                 .subreddit(subreddit)
                 .creationDate(LocalDateTime.now())
