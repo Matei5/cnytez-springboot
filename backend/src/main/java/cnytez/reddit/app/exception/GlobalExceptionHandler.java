@@ -1,6 +1,10 @@
 package cnytez.reddit.app.exception;
 
+import cnytez.reddit.app.dto.ApiError;
+import cnytez.reddit.app.dto.ApiErrorResponse;
+import cnytez.reddit.app.dto.ErrorDetail;
 import cnytez.reddit.app.log.LogManager;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,54 +12,119 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import java.time.Instant;
+import java.util.List;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
     private final LogManager logManager;
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
-        logManager.log(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(ex.getMessage()));
+    public ResponseEntity<ApiErrorResponse> handleNotFound(
+            ResourceNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.NOT_FOUND,
+                "NOT_FOUND",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequest(BadRequestException ex) {
-        logManager.log(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(ex.getMessage()));
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(
+            BadRequestException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.BAD_REQUEST,
+                "BAD_REQUEST",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex) {
-        logManager.log(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody(ex.getMessage()));
+    public ResponseEntity<ApiErrorResponse> handleUnauthorized(
+            UnauthorizedException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "UNAUTHORIZED",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiErrorResponse> handleForbidden(
+            ForbiddenException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.FORBIDDEN,
+                "FORBIDDEN",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(
-            MethodArgumentNotValidException ex
+    public ResponseEntity<ApiErrorResponse> handleValidation(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
     ) {
-        String message = ex.getBindingResult()
+        List<ErrorDetail> details = exception
+                .getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .findFirst()
-                .map(error -> error.getDefaultMessage())
-                .orElse("Invalid request.");
+                .map(fieldError -> new ErrorDetail(
+                        fieldError.getField(),
+                        fieldError.getDefaultMessage()
+                ))
+                .toList();
 
-        logManager.log(message);
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorBody(message));
+        return errorResponse(
+                HttpStatus.BAD_REQUEST,
+                "VALIDATION_ERROR",
+                "The supplied data is invalid.",
+                details,
+                request
+        );
     }
 
-    private Map<String, Object> errorBody(String message) {
-        return Map.of(
-                "timestamp", LocalDateTime.now().toString(),
-                "message", message
+    private ResponseEntity<ApiErrorResponse> errorResponse(
+            HttpStatus status,
+            String code,
+            String message,
+            List<ErrorDetail> details,
+            HttpServletRequest request
+    ) {
+        logManager.log(message);
+
+        ApiError error = new ApiError(
+                code,
+                message,
+                details
         );
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                false,
+                error,
+                Instant.now(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(status)
+                .body(response);
     }
 }
