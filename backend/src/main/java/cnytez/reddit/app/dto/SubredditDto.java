@@ -1,14 +1,16 @@
 package cnytez.reddit.app.dto;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record SubredditDto(
-        Long id,
+        UUID id,
         String name,
-        String photo,
-        String banner,
-        Long ownerId,
-        String ownerUsername,
-        LocalDateTime createdAt,
-        int memberCount
-) {}
+        String displayName,
+        String description,
+        int memberCount,
+        long postCount,
+        String iconUrl,
+        LocalDateTime createdAt
+) {
+}

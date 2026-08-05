@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "comments")
@@ -16,18 +17,18 @@ import java.util.List;
 public class Comment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    private String title;
 
     @Column(columnDefinition = "TEXT")
     private String text;
 
-    private String image;
 
     @Column(nullable = false)
     private LocalDateTime creationDate;
+
+    private LocalDateTime updatedAt;
 
     private LocalDateTime deletionDate;
 

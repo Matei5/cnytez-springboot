@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "subreddits")
@@ -16,14 +17,19 @@ import java.util.Set;
 public class Subreddit {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String name;
 
-    private String photo;
-    private String banner;
+    @Column(nullable = false)
+    private String displayName;
+
+    @Column(length = 500, nullable = false)
+    private String description;
+
+    private String iconUrl;
 
     @Column(nullable = false)
     private LocalDateTime creationDate;

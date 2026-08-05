@@ -1,64 +1,102 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.dto.CommentDto;
-import cnytez.reddit.app.dto.CreateCommentRequest;
-import cnytez.reddit.app.dto.VoteRequest;
+import cnytez.reddit.app.dto.*;
 import cnytez.reddit.app.service.CommentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
+
 
 @RestController
-@RequestMapping("/api/comments")
 @RequiredArgsConstructor
 public class CommentController {
 
     private final CommentService commentService;
 
-    // GET /api/comments/{id}
-    @GetMapping("/{id}")
-    public ResponseEntity<CommentDto> getCommentById(@PathVariable Long id) {
-        return ResponseEntity.ok(commentService.getCommentById(id));
+    @GetMapping("/comments/{id}")
+    public ResponseEntity<ApiResponse<CommentDto>> getCommentById(
+            @PathVariable UUID id
+    ) {
+        CommentDto comment = commentService.getCommentById(id);
+        ApiResponse<CommentDto> response =
+                new ApiResponse<>(true, comment);
+
+        return ResponseEntity.ok(response);
     }
 
-    // GET /api/comments/by-post/{postId} top-level comments only
-    @GetMapping("/by-post/{postId}")
-    public ResponseEntity<List<CommentDto>> getCommentsByPost(@PathVariable Long postId) {
-        return ResponseEntity.ok(commentService.getCommentsByPost(postId));
+    @GetMapping("/posts/{postId}/comments")
+    public ResponseEntity<ApiListResponse<CommentDto>> getCommentsByPost(
+            @PathVariable UUID postId
+    ) {
+        List<CommentDto> comments =
+                commentService.getCommentsByPost(postId);
+
+        long total = commentService.countCommentsByPost(postId);
+
+        ApiListResponse<CommentDto> response =
+                new ApiListResponse<>(true, comments, total);
+
+        return ResponseEntity.ok(response);
+    }
+    
+
+    @PostMapping("/posts/{postId}/comments")
+    public ResponseEntity<ApiResponse<CommentDto>> createComment(
+            @PathVariable UUID postId,
+            @Valid @RequestBody CreateCommentRequest request
+    ) {
+        CommentDto comment = commentService.createComment(postId, request);
+        ApiResponse<CommentDto> response =
+                new ApiResponse<>(true, comment);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
-    // GET /api/comments/{id}/replies
-    @GetMapping("/{id}/replies")
-    public ResponseEntity<List<CommentDto>> getReplies(@PathVariable Long id) {
-        return ResponseEntity.ok(commentService.getReplies(id));
+
+    @PutMapping("/comments/{id}/vote")
+    public ResponseEntity<ApiResponse<VoteResponse>> vote(
+            @PathVariable UUID id,
+            @RequestBody VoteRequest request
+    ) {
+        VoteResponse vote = commentService.vote(id, request);
+        ApiResponse<VoteResponse> response =
+                new ApiResponse<>(true, vote);
+
+        return ResponseEntity.ok(response);
     }
 
-    // GET /api/comments/by-user/{userId}
-    @GetMapping("/by-user/{userId}")
-    public ResponseEntity<List<CommentDto>> getCommentsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(commentService.getCommentsByUser(userId));
+    @DeleteMapping("/comments/{id}")
+    public ResponseEntity<ApiMessageResponse> deleteComment(
+            @PathVariable UUID id
+    ) {
+        commentService.deleteComment(id);
+
+        ApiMessageResponse response = new ApiMessageResponse(
+                true,
+                "The comment was deleted successfully."
+        );
+
+        return ResponseEntity.ok(response);
     }
 
-    // POST /api/comments
-    @PostMapping
-    public ResponseEntity<CommentDto> createComment(@RequestBody CreateCommentRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.createComment(request));
-    }
+    @PutMapping("/comments/{id}")
+    public ResponseEntity<ApiResponse<CommentDto>> updateComment(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateCommentRequest request
+    ) {
+        CommentDto comment =
+                commentService.updateComment(id, request);
 
-    // POST /api/comments/{id}/vote
-    @PostMapping("/{id}/vote")
-    public ResponseEntity<CommentDto> vote(@PathVariable Long id, @RequestBody VoteRequest request) {
-        return ResponseEntity.ok(commentService.vote(id, request));
-    }
+        ApiResponse<CommentDto> response =
+                new ApiResponse<>(true, comment);
 
-    // DELETE /api/comments/{id}?requestingUserId={userId}
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long id,
-                                              @RequestParam Long requestingUserId) {
-        commentService.deleteComment(id, requestingUserId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(response);
     }
 }

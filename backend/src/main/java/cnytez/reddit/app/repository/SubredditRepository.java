@@ -6,15 +6,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface SubredditRepository extends JpaRepository<Subreddit, Long> {
+public interface SubredditRepository extends JpaRepository<Subreddit, UUID> {
 
     Optional<Subreddit> findByName(String name);
 
     boolean existsByName(String name);
 
-    List<Subreddit> findByOwnerId(Long ownerId);
+    List<Subreddit> findByOwnerId(UUID ownerId);
 
-    List<Subreddit> findAllByMembersId(Long userId);
+    List<Subreddit> findAllByMembersId(UUID userId);
 }

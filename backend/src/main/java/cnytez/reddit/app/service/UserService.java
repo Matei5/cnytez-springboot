@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +30,7 @@ public class UserService {
                 .toList();
     }
 
-    public UserDto getUserById(Long id) {
+    public UserDto getUserById(UUID id) {
         return toDto(userRepository.findByIdAndDeletionDateIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)));
     }
@@ -40,21 +41,17 @@ public class UserService {
     }
 
     @Transactional
-    public UserDto updateProfile(Long id, UpdateProfileRequest request) {
+    public UserDto updateProfile(UUID id, UpdateProfileRequest request) {
         User user = userRepository.findByIdAndDeletionDateIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        if (request.username() != null && !request.username().equals(user.getUsername())) {
-            if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
-                throw new BadRequestException("Username '" + request.username() + "' is already taken.");
-            }
-            user.setUsername(request.username());
+
+        if (request.displayName() != null) {
+            user.setName(request.displayName());
         }
-        if (request.name() != null) {
-            user.setName(request.name());
-        }
-        if (request.profilePhoto() != null) {
-            user.setProfilePhoto(request.profilePhoto());
+
+        if (request.avatarUrl() != null) {
+            user.setProfilePhoto(request.avatarUrl());
         }
 
         logManager.log("Update profile success! User with id " + id + " updated");
@@ -62,7 +59,7 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(Long id) {
+    public void deleteUser(UUID id) {
         User user = userRepository.findByIdAndDeletionDateIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
@@ -96,7 +93,7 @@ public class UserService {
         if (user.getDeletionDate() != null) {
             username = "[deleted]";
         } else {
-            username = user.getName();
+            username = user.getUsername();
         }
 
         return new UserDto(user.getId(), user.getName(), username,

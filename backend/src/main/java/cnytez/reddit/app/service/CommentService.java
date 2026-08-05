@@ -1,8 +1,6 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.dto.CommentDto;
-import cnytez.reddit.app.dto.CreateCommentRequest;
-import cnytez.reddit.app.dto.VoteRequest;
+import cnytez.reddit.app.dto.*;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
@@ -19,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -30,8 +29,9 @@ public class CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final LogManager logManager;
+    private final CurrentUserService currentUserService;
 
-    public List<CommentDto> getCommentsByPost(Long postId) {
+    public List<CommentDto> getCommentsByPost(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
         // Return only top-level comments; clients can fetch replies per comment
@@ -40,51 +40,57 @@ public class CommentService {
                 .toList();
     }
 
-    public List<CommentDto> getReplies(Long parentCommentId) {
-        Comment parent = findCommentById(parentCommentId);
-        return commentRepository.findByParentComment(parent).stream()
-                .map(this::toDto)
-                .toList();
-    }
 
-    public List<CommentDto> getCommentsByUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        return commentRepository.findByOwner(user).stream()
-                .map(this::toDto)
-                .toList();
-    }
 
-    public CommentDto getCommentById(Long id) {
+    public CommentDto getCommentById(UUID id) {
         return toDto(findCommentById(id));
     }
 
     @Transactional
-    public CommentDto createComment(CreateCommentRequest request) {
-        User owner = userRepository.findByIdAndDeletionDateIsNull(request.ownerId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.ownerId()));
-        Post post = postRepository.findById(request.postId())
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + request.postId()));
+    public CommentDto createComment(
+            UUID postId,
+            CreateCommentRequest request
+    ) {
+        User owner = currentUserService.getCurrentUser();
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Post not found with id: " + postId
+                ));
+
+        if (post.getDeletionDate() != null) {
+            throw new BadRequestException(
+                    "Comments cannot be added to a deleted post."
+            );
+        }
 
         Comment parentComment = null;
-        if (request.parentCommentId() != null) {
-            parentComment = commentRepository.findById(request.parentCommentId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Parent comment not found with id: " + request.parentCommentId()));
-            // Ensure parent comment belongs to the same post
-            if (!parentComment.getPost().getId().equals(request.postId())) {
-                throw new BadRequestException("Parent comment does not belong to the specified post.");
+
+        if (request.parentId() != null) {
+            parentComment = findCommentById(request.parentId());
+
+            if (!parentComment.getPost().getId().equals(postId)) {
+                throw new BadRequestException(
+                        "Parent comment does not belong to this post."
+                );
+            }
+
+            if (parentComment.getDeletionDate() != null) {
+                throw new BadRequestException(
+                        "Replies cannot be added to a deleted comment."
+                );
             }
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
         Comment comment = Comment.builder()
-                .title(request.title())
-                .text(request.text())
-                .image(request.image())
+                .text(request.content())
                 .owner(owner)
                 .post(post)
                 .parentComment(parentComment)
-                .creationDate(LocalDateTime.now())
+                .creationDate(now)
+                .updatedAt(now)
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
@@ -94,90 +100,190 @@ public class CommentService {
                 .comment(savedComment)
                 .voteType(VoteType.UPVOTE)
                 .build();
+
         commentVoteRepository.save(creatorVote);
 
-        logManager.log("Create comment success! User with id " + owner.getId() +
-                " created comment with id " + comment.getId());
+        logManager.log(
+                "Create comment success! User with id "
+                        + owner.getId()
+                        + " created comment with id "
+                        + savedComment.getId()
+        );
+
         return toDto(savedComment);
     }
-
     @Transactional
-    public CommentDto vote(Long commentId, VoteRequest request) {
+    public VoteResponse vote(UUID commentId, VoteRequest request) {
         Comment comment = findCommentById(commentId);
-        User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
+        User currentUser = currentUserService.getCurrentUser();
 
-        Optional<CommentVote> existingVote = commentVoteRepository.findByUserAndComment(user, comment);
+        if (comment.getDeletionDate() != null) {
+            throw new BadRequestException("Deleted comments cannot be voted.");
+        }
+
+        Optional<CommentVote> existingVote =
+                commentVoteRepository.findByUserAndComment(currentUser, comment);
+
+        if ("none".equalsIgnoreCase(request.voteType())) {
+            existingVote.ifPresent(commentVoteRepository::delete);
+            return toVoteResponse(comment);
+        }
+
+        VoteType newVoteType;
+
+        if ("up".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.UPVOTE;
+        } else if ("down".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.DOWNVOTE;
+        } else {
+            throw new BadRequestException(
+                    "Vote type must be up, down or none."
+            );
+        }
 
         if (existingVote.isPresent()) {
             CommentVote vote = existingVote.get();
-            if (vote.getVoteType() == request.voteType()) {
-                // Same vote = remove it (toggle off)
-                commentVoteRepository.delete(vote);
-            } else {
-                // Different vote = switch it
-                vote.setVoteType(request.voteType());
-                commentVoteRepository.save(vote);
-            }
+            vote.setVoteType(newVoteType);
+            commentVoteRepository.save(vote);
         } else {
             CommentVote newVote = CommentVote.builder()
-                    .user(user)
+                    .user(currentUser)
                     .comment(comment)
-                    .voteType(request.voteType())
+                    .voteType(newVoteType)
                     .build();
+
             commentVoteRepository.save(newVote);
         }
-        logManager.log("Vote comment success! User with id " + user.getId() +
-                " voted comment with id " + commentId);
-        return toDto(comment);
+
+        return toVoteResponse(comment);
+    }
+    @Transactional
+    public void deleteComment(UUID commentId) {
+        Comment comment = findCommentById(commentId);
+        User currentUser = currentUserService.getCurrentUser();
+
+        if (comment.getDeletionDate() != null) {
+            throw new BadRequestException(
+                    "Comment is already deleted."
+            );
+        }
+
+        if (!comment.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the comment author can delete this comment."
+            );
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        comment.setText("[deleted by user]");
+        comment.setDeletionDate(now);
+        comment.setUpdatedAt(now);
+
+        commentRepository.save(comment);
+
+        logManager.log(
+                "Delete comment success! User with id "
+                        + currentUser.getId()
+                        + " deleted comment with id "
+                        + commentId
+        );
     }
 
     @Transactional
-    public void deleteComment(Long commentId, Long requestingUserId) {
+    public CommentDto updateComment(
+            UUID commentId,
+            UpdateCommentRequest request
+    ) {
         Comment comment = findCommentById(commentId);
-        User owner = comment.getOwner();
+        User currentUser = currentUserService.getCurrentUser();
 
-        if (owner.getDeletionDate() != null) {
-            throw new BadRequestException("Only the comment author can delete this comment.");
+        if (comment.getDeletionDate() != null) {
+            throw new BadRequestException(
+                    "Deleted comments cannot be edited."
+            );
         }
-        if (!owner.getId().equals(requestingUserId)) {
-            throw new BadRequestException("Only the comment author can delete this comment.");
+
+        if (!comment.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the comment author can edit this comment."
+            );
         }
 
-        comment.setTitle("[deleted by user]");
-        comment.setText(null);
-        comment.setImage(null);
+        comment.setText(request.content());
+        comment.setUpdatedAt(LocalDateTime.now());
 
-        comment.setDeletionDate(LocalDateTime.now());
+        Comment savedComment = commentRepository.save(comment);
 
-        commentRepository.save(comment);
-        logManager.log("Delete comment success! User with id " + requestingUserId +
-                " deleted comment with id " + commentId);
+        return toDto(savedComment);
     }
 
-    private Comment findCommentById(Long id) {
+
+
+
+    private Comment findCommentById(UUID id) {
         return commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + id));
     }
 
+
+    private VoteResponse toVoteResponse(Comment comment) {
+        CommentDto commentDto = toDto(comment);
+
+        return new VoteResponse(
+                commentDto.upvotes(),
+                commentDto.downvotes(),
+                commentDto.score(),
+                commentDto.userVote()
+        );
+    }
+
     private CommentDto toDto(Comment comment) {
-        long upvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.UPVOTE);
-        long downvotes = commentVoteRepository.countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
-        long replyCount = commentRepository.countByParentComment(comment);
+        long upvotes = commentVoteRepository
+                .countByCommentAndVoteType(comment, VoteType.UPVOTE);
+
+        long downvotes = commentVoteRepository
+                .countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
+
+        String userVote = currentUserService
+                .findCurrentUser()
+                .flatMap(user ->
+                        commentVoteRepository.findByUserAndComment(user, comment)
+                )
+                .map(vote -> {
+                    if (vote.getVoteType() == VoteType.UPVOTE) {
+                        return "up";
+                    }
+
+                    return "down";
+                })
+                .orElse(null);
+
+        List<CommentDto> replies = commentRepository
+                .findByParentComment(comment)
+                .stream()
+                .map(this::toDto)
+                .toList();
+
         return new CommentDto(
                 comment.getId(),
-                comment.getTitle(),
-                comment.getText(),
-                comment.getImage(),
-                comment.getCreationDate(),
-                comment.getOwner().getId(),
-                comment.getOwner().getUsername(),
                 comment.getPost().getId(),
-                comment.getParentComment() != null ? comment.getParentComment().getId() : null,
-                (int) (upvotes - downvotes),
+                comment.getParentComment() != null
+                        ? comment.getParentComment().getId()
+                        : null,
+                comment.getText(),
+                comment.getOwner().getUsername(),
                 (int) upvotes,
                 (int) downvotes,
-                (int) replyCount
+                (int) (upvotes - downvotes),
+                userVote,
+                comment.getCreationDate(),
+                comment.getUpdatedAt(),
+                replies
         );
+    }
+
+    public long countCommentsByPost(UUID postId) {
+        return commentRepository.countByPost_Id(postId);
     }
 }

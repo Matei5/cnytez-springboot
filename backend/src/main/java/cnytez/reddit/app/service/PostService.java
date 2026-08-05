@@ -1,5 +1,6 @@
 package cnytez.reddit.app.service;
 
+import cnytez.reddit.app.dto.UpdatePostRequest;
 import cnytez.reddit.app.dto.CreatePostRequest;
 import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.VoteRequest;
@@ -11,15 +12,16 @@ import cnytez.reddit.app.repository.CommentRepository;
 import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.PostVoteRepository;
 import cnytez.reddit.app.repository.SubredditRepository;
-import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import cnytez.reddit.app.dto.VoteResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -29,9 +31,9 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
     private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
     private final SubredditRepository subredditRepository;
     private final LogManager logManager;
+    private final CurrentUserService currentUserService;
 
     public List<PostDto> getAllPosts() {
         return postRepository.findAllByOrderByCreationDateDesc().stream()
@@ -39,40 +41,37 @@ public class PostService {
                 .toList();
     }
 
-    public List<PostDto> getPostsBySubreddit(Long subredditId) {
-        Subreddit subreddit = subredditRepository.findById(subredditId)
-                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + subredditId));
-        return postRepository.findBySubredditOrderByCreationDateDesc(subreddit).stream()
+    public List<PostDto> getPostsBySubreddit(String subredditName) {
+        Subreddit subreddit = subredditRepository.findByName(subredditName)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Subreddit not found: " + subredditName
+                ));
+
+        return postRepository
+                .findBySubredditOrderByCreationDateDesc(subreddit)
+                .stream()
                 .map(this::toDto)
                 .toList();
     }
 
-    public List<PostDto> getPostsByUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        return postRepository.findByOwner(user).stream()
-                .map(this::toDto)
-                .toList();
-    }
-
-    public PostDto getPostById(Long id) {
+    public PostDto getPostById(UUID id) {
         return toDto(findPostById(id));
     }
 
     @Transactional
     public PostDto createPost(CreatePostRequest request) {
-        User owner = userRepository.findByIdAndDeletionDateIsNull(request.ownerId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.ownerId()));
-        Subreddit subreddit = subredditRepository.findById(request.subredditId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with id: " + request.subredditId()));
+        User owner = currentUserService.getCurrentUser();
+        Subreddit subreddit = subredditRepository.findByName(request.subreddit())
+                .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with name: " + request.subreddit()));
 
         Post post = Post.builder()
                 .title(request.title())
-                .text(request.text())
-                .image(request.image())
+                .text(request.content())
+                .image(null)
                 .owner(owner)
                 .subreddit(subreddit)
                 .creationDate(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -89,82 +88,157 @@ public class PostService {
     }
 
     @Transactional
-    public PostDto vote(Long postId, VoteRequest request) {
+    public PostDto updatePost(UUID postId, UpdatePostRequest request) {
         Post post = findPostById(postId);
-        User user = userRepository.findByIdAndDeletionDateIsNull(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.userId()));
+        User currentUser = currentUserService.getCurrentUser();
 
-        Optional<PostVote> existingVote = postVoteRepository.findByUserAndPost(user, post);
+        if (post.getDeletionDate() != null) {
+            throw new BadRequestException("Deleted posts cannot be edited.");
+        }
+
+        if (!post.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the post author can edit this post."
+            );
+        }
+
+        if (request.title() != null) {
+            post.setTitle(request.title());
+        }
+
+        if (request.content() != null) {
+            post.setText(request.content());
+        }
+
+        post.setUpdatedAt(LocalDateTime.now());
+
+        Post savedPost = postRepository.save(post);
+        return toDto(savedPost);
+    }
+    @Transactional
+    public VoteResponse vote(UUID postId, VoteRequest request) {
+        Post post = findPostById(postId);
+        User currentUser = currentUserService.getCurrentUser();
+
+        if (post.getDeletionDate() != null) {
+            throw new BadRequestException("Deleted posts cannot be voted.");
+        }
+
+        Optional<PostVote> existingVote =
+                postVoteRepository.findByUserAndPost(currentUser, post);
+
+        if ("none".equalsIgnoreCase(request.voteType())) {
+            existingVote.ifPresent(postVoteRepository::delete);
+            return toVoteResponse(post);
+        }
+
+        VoteType newVoteType;
+
+        if ("up".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.UPVOTE;
+        } else if ("down".equalsIgnoreCase(request.voteType())) {
+            newVoteType = VoteType.DOWNVOTE;
+        } else {
+            throw new BadRequestException(
+                    "Vote type must be up, down or none."
+            );
+        }
 
         if (existingVote.isPresent()) {
             PostVote vote = existingVote.get();
-            if (vote.getVoteType() == request.voteType()) {
-                // Same vote = remove it (toggle off)
-                postVoteRepository.delete(vote);
-            } else {
-                // Different vote = switch it
-                vote.setVoteType(request.voteType());
-                postVoteRepository.save(vote);
-            }
+            vote.setVoteType(newVoteType);
+            postVoteRepository.save(vote);
         } else {
             PostVote newVote = PostVote.builder()
-                    .user(user)
+                    .user(currentUser)
                     .post(post)
-                    .voteType(request.voteType())
+                    .voteType(newVoteType)
                     .build();
+
             postVoteRepository.save(newVote);
-            logManager.log("Vote post success! User with id " + user.getId() +
-                    " voted post with id " + postId);
         }
 
-        return toDto(post);
+        return toVoteResponse(post);
     }
 
     @Transactional
-    public void deletePost(Long postId, Long requestingUserId) {
+    public void deletePost(UUID postId) {
         Post post = findPostById(postId);
-        User owner = post.getOwner();
+        User currentUser = currentUserService.getCurrentUser();
 
-        if (owner.getDeletionDate() != null) {
-            throw new BadRequestException("Only the post author can delete this post.");
+        if (post.getDeletionDate() != null) {
+            throw new BadRequestException("Post is already deleted.");
         }
-        if (!owner.getId().equals(requestingUserId)) {
-            throw new BadRequestException("Only the post author can delete this post.");
+
+        if (!post.getOwner().getId().equals(currentUser.getId())) {
+            throw new BadRequestException(
+                    "Only the post author can delete this post."
+            );
         }
 
         post.setTitle("[deleted by user]");
         post.setText(null);
         post.setImage(null);
-
         post.setDeletionDate(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
 
         postRepository.save(post);
-        logManager.log("Delete post success! User with id " + requestingUserId + " deleted post with id " + postId);
+
+        logManager.log(
+                "Delete post success! User with id "
+                        + currentUser.getId()
+                        + " deleted post with id "
+                        + postId
+        );
     }
 
-    Post findPostById(Long id) {
+    Post findPostById(UUID id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
     }
 
+
+    private VoteResponse toVoteResponse(Post post) {
+        PostDto postDto = toDto(post);
+
+        return new VoteResponse(
+                postDto.upvotes(),
+                postDto.downvotes(),
+                postDto.score(),
+                postDto.userVote()
+        );
+    }
     private PostDto toDto(Post post) {
         long upvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);
         long downvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
         long commentCount = commentRepository.countByPost(post);
+
+        String userVote = currentUserService
+                .findCurrentUser()
+                .flatMap(user -> postVoteRepository.findByUserAndPost(user, post))
+                .map(vote -> {
+                    if (vote.getVoteType() == VoteType.UPVOTE) {
+                        return "up";
+                    }
+
+                    return "down";
+                })
+                .orElse(null);
         return new PostDto(
                 post.getId(),
                 post.getTitle(),
                 post.getText(),
                 post.getImage(),
-                post.getCreationDate(),
-                post.getOwner().getId(),
+                post.getFilter(),
                 post.getOwner().getUsername(),
-                post.getSubreddit().getId(),
                 post.getSubreddit().getName(),
-                (int) (upvotes - downvotes),
                 (int) upvotes,
                 (int) downvotes,
-                (int) commentCount
+                (int) (upvotes - downvotes),
+                (int) commentCount,
+                userVote,
+                post.getCreationDate(),
+                post.getUpdatedAt()
         );
     }
 }
