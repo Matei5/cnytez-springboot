@@ -27,17 +27,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 HttpMethod.POST,
-                                "/api/auth/register",
-                                "/api/auth/login"
+                                "/auth/register",
+                                "/auth/login"
                         ).permitAll()
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/",
-                                "/api/posts/**",
-                                "/api/comments/**",
-                                "/api/subreddits/**",
-                                "/api/filters"
+                                "/posts/**",
+                                "/comments/**",
+                                "/subreddits/**",
+                                "/filters"
                         ).permitAll()
 
                         .anyRequest().authenticated()

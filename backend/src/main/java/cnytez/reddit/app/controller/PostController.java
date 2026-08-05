@@ -19,7 +19,7 @@ import cnytez.reddit.app.dto.ApiMessageResponse;
 import cnytez.reddit.app.dto.VoteResponse;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/posts")
 @RequiredArgsConstructor
 public class PostController {
 

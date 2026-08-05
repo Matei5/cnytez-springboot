@@ -17,7 +17,7 @@ import cnytez.reddit.app.dto.UpdateProfileRequest;
 import cnytez.reddit.app.dto.UserProfileDto;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
