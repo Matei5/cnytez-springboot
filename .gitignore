@@ -34,3 +34,6 @@ build/
 
 ### Application logs ###
 *.log
+
+### Secrets ###
+.env
