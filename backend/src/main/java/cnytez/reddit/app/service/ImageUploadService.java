@@ -1,15 +1,12 @@
 package cnytez.reddit.app.service;
 
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.rmi.ServerException;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class ImageUploadService {
@@ -29,7 +26,8 @@ public class ImageUploadService {
         }
 
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("file", file.getResource());
+        builder.part("file", file.getResource())
+                .filename(file.getOriginalFilename());
 
         return restClient.post()
                 .uri(targetUrl)
@@ -37,10 +35,12 @@ public class ImageUploadService {
                 .body(builder.build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    throw new RuntimeException("Invalid request: " + response.getStatusCode() + response.getBody());
+                    String errorBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                    throw new RuntimeException("Invalid request: " + response.getStatusCode() + " "+ errorBody);
                 })
                 .onStatus(HttpStatusCode::is5xxServerError, ((request, response) -> {
-                    throw new RuntimeException("Internal server issue: " + response.getStatusCode() + response.getBody().toString());
+                    String errorBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                    throw new RuntimeException("Internal server issue: " + response.getStatusCode() + " " + errorBody);
                 }))
                 .body(String.class);
     }
