@@ -39,7 +39,7 @@ public class SecurityConfig {
                                 "/subreddits/**",
                                 "/filters"
                         ).permitAll()
-
+                        .requestMatchers("/users/**").denyAll()
                         .anyRequest().authenticated()
                 )
 
