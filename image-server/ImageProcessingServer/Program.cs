@@ -13,6 +13,7 @@ namespace ImageProcessingServer
     {
         private const string bucketName = "cnytez-image-server-s3";
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.EUCentral1;
+        private static AmazonS3Client s3Client = new AmazonS3Client(bucketRegion);
         public static void Main(string[] args)
         {
             var allowedExtensions = new string[] { ".jpg", ".jpeg", ".png", ".webp", ".bmp" };
@@ -28,7 +29,7 @@ namespace ImageProcessingServer
 
             app.MapGet("/", () => "Image processing server is available");
 
-            app.MapPost("/{filter?}", async (IFormFile file, IAmazonS3 s3Client, string? filter = null) =>
+            app.MapPost("/{filter?}", async (IFormFile file, string? filter = null) =>
             {
                 if (file == null || file.Length == 0)
                     return Results.BadRequest("No image sent");
@@ -54,7 +55,7 @@ namespace ImageProcessingServer
 
                     await s3Client.PutObjectAsync(putRequest);
 
-                    string fileUrl = $"http://{bucketName}.s3.{bucketRegion.SystemName}://{s3Key}";
+                    string fileUrl = $"http://{bucketName}.s3.{bucketRegion.SystemName}.amazonaws.com/{s3Key}";
 
                     return Results.Ok(fileUrl);
                 } 
