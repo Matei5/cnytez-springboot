@@ -2,7 +2,8 @@ package cnytez.reddit.app.service;
 
 import cnytez.reddit.app.dto.LoginRequest;
 import cnytez.reddit.app.dto.RegisterRequest;
-import cnytez.reddit.app.dto.UserDto;
+import cnytez.reddit.app.dto.AuthResponse;
+import cnytez.reddit.app.dto.AuthUserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.UnauthorizedException;
 import cnytez.reddit.app.log.LogManager;
@@ -19,8 +20,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final LogManager logManager;
+    private final JwtService jwtService;
 
-    public UserDto register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
             throw new BadRequestException("Username '" + request.username() + "' is already taken.");
         }
@@ -29,19 +31,20 @@ public class AuthService {
         }
 
         User user = User.builder()
-                .name(request.name())
+                .name(request.username())
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .profilePhoto(request.profilePhoto())
+                .profilePhoto(null)
                 .build();
 
         User saved = userRepository.save(user);
         logManager.log("Register success! User with id " + user.getId() + " registered");
-        return toDto(saved);
+        String token = jwtService.generateToken(saved.getUsername());
+        return toAuthResponse(saved, token);
     }
 
-    public UserDto login(LoginRequest request) {
+    public AuthResponse  login(LoginRequest request) {
         User user = userRepository.findByUsernameAndDeletionDateIsNull(request.username())
                 .orElseThrow(() -> new UnauthorizedException("Invalid username or password."));
 
@@ -50,19 +53,16 @@ public class AuthService {
         }
 
         logManager.log("Login success! User with id " + user.getId() + " logged in");
-        return toDto(user);
+        String token = jwtService.generateToken(user.getUsername());
+        return toAuthResponse(user, token);
     }
 
-    private UserDto toDto(User user) {
-        String username = null;
+    private AuthResponse toAuthResponse(User user, String token) {
+        AuthUserDto userDto = new AuthUserDto(
+                user.getUsername(),
+                user.getEmail()
+        );
 
-        if (user.getDeletionDate() != null) {
-            username = "[deleted]";
-        } else {
-            username = user.getUsername();
-        }
-
-        return new UserDto(user.getId(), user.getName(), username,
-                user.getEmail(), user.getProfilePhoto());
+        return new AuthResponse(token, userDto);
     }
 }

@@ -6,10 +6,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
-        @NotBlank(message = "Name is required.")
-        @Size(min = 2, max = 50, message = "Name must contain between 2 and 50 characters.")
-        String name,
-
         @NotBlank(message = "Username is required.")
         @Size(min = 3, max = 20, message = "Username must contain between 3 and 20 characters.")
         @Pattern(
@@ -24,9 +20,6 @@ public record RegisterRequest(
         String email,
 
         @NotBlank(message = "Password is required.")
-        @Size(min = 6, max = 72, message = "Password must contain between 6 and 72 characters.")
-        String password,
-
-        @Size(max = 500, message = "Profile photo URL must contain at most 500 characters.")
-        String profilePhoto
+        @Size(min = 8, max = 72, message = "Password must contain between 8 and 72 characters.")
+        String password
 ) {}

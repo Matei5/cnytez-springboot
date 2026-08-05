@@ -12,7 +12,6 @@ import cnytez.reddit.app.repository.CommentRepository;
 import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.PostVoteRepository;
 import cnytez.reddit.app.repository.SubredditRepository;
-import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,13 +28,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PostService {
 
-    private static final String CURRENT_USERNAME = "current_user";
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
     private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
     private final SubredditRepository subredditRepository;
     private final LogManager logManager;
+    private final CurrentUserService currentUserService;
 
     public List<PostDto> getAllPosts() {
         return postRepository.findAllByOrderByCreationDateDesc().stream()
@@ -56,22 +54,13 @@ public class PostService {
                 .toList();
     }
 
-    public List<PostDto> getPostsByUser(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        return postRepository.findByOwner(user).stream()
-                .map(this::toDto)
-                .toList();
-    }
-
     public PostDto getPostById(UUID id) {
         return toDto(findPostById(id));
     }
 
     @Transactional
     public PostDto createPost(CreatePostRequest request) {
-        User owner = userRepository.findByUsernameAndDeletionDateIsNull(request.author())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + request.author()));
+        User owner = currentUserService.getCurrentUser();
         Subreddit subreddit = subredditRepository.findByName(request.subreddit())
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with name: " + request.subreddit()));
 
@@ -101,7 +90,7 @@ public class PostService {
     @Transactional
     public PostDto updatePost(UUID postId, UpdatePostRequest request) {
         Post post = findPostById(postId);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (post.getDeletionDate() != null) {
             throw new BadRequestException("Deleted posts cannot be edited.");
@@ -129,7 +118,7 @@ public class PostService {
     @Transactional
     public VoteResponse vote(UUID postId, VoteRequest request) {
         Post post = findPostById(postId);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (post.getDeletionDate() != null) {
             throw new BadRequestException("Deleted posts cannot be voted.");
@@ -175,7 +164,7 @@ public class PostService {
     @Transactional
     public void deletePost(UUID postId) {
         Post post = findPostById(postId);
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         if (post.getDeletionDate() != null) {
             throw new BadRequestException("Post is already deleted.");
@@ -209,14 +198,6 @@ public class PostService {
     }
 
 
-    private User getCurrentUser() {
-        return userRepository
-                .findByUsernameAndDeletionDateIsNull(CURRENT_USERNAME)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found: " + CURRENT_USERNAME
-                ));
-    }
-
     private VoteResponse toVoteResponse(Post post) {
         PostDto postDto = toDto(post);
 
@@ -232,10 +213,9 @@ public class PostService {
         long downvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
         long commentCount = commentRepository.countByPost(post);
 
-        User currentUser = getCurrentUser();
-
-        String userVote = postVoteRepository
-                .findByUserAndPost(currentUser, post)
+        String userVote = currentUserService
+                .findCurrentUser()
+                .flatMap(user -> postVoteRepository.findByUserAndPost(user, post))
                 .map(vote -> {
                     if (vote.getVoteType() == VoteType.UPVOTE) {
                         return "up";
@@ -249,17 +229,16 @@ public class PostService {
                 post.getTitle(),
                 post.getText(),
                 post.getImage(),
-                post.getCreationDate(),
-                post.getUpdatedAt(),
-                post.getOwner().getId(),
+                post.getFilter(),
                 post.getOwner().getUsername(),
-                post.getSubreddit().getId(),
                 post.getSubreddit().getName(),
-                (int) (upvotes - downvotes),
                 (int) upvotes,
                 (int) downvotes,
+                (int) (upvotes - downvotes),
+                (int) commentCount,
                 userVote,
-                (int) commentCount
+                post.getCreationDate(),
+                post.getUpdatedAt()
         );
     }
 }
