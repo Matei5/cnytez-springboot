@@ -26,7 +26,11 @@ public class Post {
 
     private String image;
 
-    private Integer filter;
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "filter_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Filter filter;
 
     @Column(nullable = false)
     private Instant creationDate;
