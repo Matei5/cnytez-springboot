@@ -59,6 +59,10 @@ namespace ImageProcessingServer
 
                     return Results.Ok(fileUrl);
                 } 
+                catch (ArgumentException)
+                {
+                    return Results.BadRequest("Invalid filter");
+                }
                 catch (MagickMissingDelegateErrorException)
                 {
                     return Results.BadRequest("File extension does not match contents");
@@ -87,7 +91,10 @@ namespace ImageProcessingServer
 
             switch(filter)
             {
-                case "greyscale":
+                case "none":
+                    break;
+
+                case "grayscale":
                     image.ColorSpace = ColorSpace.Gray;
                     break;
 
@@ -110,7 +117,7 @@ namespace ImageProcessingServer
                     break;
 
                 default:
-                    break;
+                    throw new ArgumentException();
             }
 
             var output = new MemoryStream();
