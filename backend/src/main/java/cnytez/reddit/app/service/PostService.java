@@ -71,7 +71,7 @@ public class PostService {
                 .owner(owner)
                 .subreddit(subreddit)
                 .creationDate(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .updatedAt(null)
                 .build();
 
         Post savedPost = postRepository.save(post);
