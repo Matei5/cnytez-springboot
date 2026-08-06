@@ -66,8 +66,8 @@ public class PostService {
         String imageUrl = null;
         Filter filter = null;
         if (request.image() != null) {
-            filter = filterRepository.findById(request.filterId()).orElseThrow(
-                    () -> new BadRequestException("Invalid filter id: " + request.filterId())
+            filter = filterRepository.findById(request.filter()).orElseThrow(
+                    () -> new BadRequestException("Invalid filter id: " + request.filter())
             );
 
             try {
