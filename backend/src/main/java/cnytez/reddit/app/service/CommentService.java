@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -82,7 +82,7 @@ public class CommentService {
             }
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         Comment comment = Comment.builder()
                 .text(request.content())
@@ -90,7 +90,7 @@ public class CommentService {
                 .post(post)
                 .parentComment(parentComment)
                 .creationDate(now)
-                .updatedAt(now)
+                .updatedAt(null)
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
@@ -174,7 +174,7 @@ public class CommentService {
             );
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         comment.setText("[deleted by user]");
         comment.setDeletionDate(now);
@@ -211,7 +211,7 @@ public class CommentService {
         }
 
         comment.setText(request.content());
-        comment.setUpdatedAt(LocalDateTime.now());
+        comment.setUpdatedAt(Instant.now());
 
         Comment savedComment = commentRepository.save(comment);
 
