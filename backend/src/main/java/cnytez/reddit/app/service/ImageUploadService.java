@@ -20,6 +20,7 @@ public class ImageUploadService {
     }
 
     public String sendImageToServer(MultipartFile file, String filterName) {
+        // no hardcode. pls move to env var/param/etc
         String targetUrl = "http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123/" + filterName;
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty");

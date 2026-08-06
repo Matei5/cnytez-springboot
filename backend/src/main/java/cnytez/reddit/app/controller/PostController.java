@@ -31,7 +31,7 @@ public class PostController {
             @RequestParam(required = false) String subreddit
     ) {
         List<PostDto> posts;
-
+        // todo move the if/else to a method in the postService
         if (subreddit == null || subreddit.isBlank()) {
             posts = postService.getAllPosts();
         } else {
@@ -52,8 +52,6 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PostDto>> createPost(
             @Valid @ModelAttribute CreatePostRequest request
@@ -66,6 +64,7 @@ public class PostController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PostDto>> updatePost(
             @PathVariable UUID id,
@@ -76,7 +75,6 @@ public class PostController {
 
         return ResponseEntity.ok(response);
     }
-
 
     @PutMapping("/{id}/vote")
     public ResponseEntity<ApiResponse<VoteResponse>> vote(@PathVariable UUID id, @RequestBody VoteRequest request) {

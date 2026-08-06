@@ -88,7 +88,7 @@ public class UserService {
     }
 
     private UserDto toDto(User user) {
-        String username = null;
+        String username;
 
         if (user.getDeletionDate() != null) {
             username = "[deleted]";

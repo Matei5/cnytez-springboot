@@ -8,6 +8,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # stage two: run the JAR using Amazon Corretto (optimized for AWS EC2)
+# todo is this JDK OR JRE?
 FROM amazoncorretto:25
 WORKDIR /app
 # copy built JAR file from stage one

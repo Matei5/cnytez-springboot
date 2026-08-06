@@ -130,7 +130,7 @@ public class CommentService {
         }
 
         VoteType newVoteType;
-
+        // enums can have parameters. UPVOTE("up"), DOWNVOTE("down") and getByXXX
         if ("up".equalsIgnoreCase(request.voteType())) {
             newVoteType = VoteType.UPVOTE;
         } else if ("down".equalsIgnoreCase(request.voteType())) {
@@ -251,6 +251,7 @@ public class CommentService {
                         commentVoteRepository.findByUserAndComment(user, comment)
                 )
                 .map(vote -> {
+                    // nope
                     if (vote.getVoteType() == VoteType.UPVOTE) {
                         return "up";
                     }

@@ -40,7 +40,7 @@ public class AuthService {
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .profilePhoto(null)
+//                .profilePhoto(null)
                 .build();
 
         User saved = userRepository.save(user);

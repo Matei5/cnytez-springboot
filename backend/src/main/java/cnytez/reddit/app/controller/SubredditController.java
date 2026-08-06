@@ -58,7 +58,7 @@ public class SubredditController {
     @GetMapping("/{name}/posts")
     public ResponseEntity<ApiResponse<List<PostDto>>> getSubredditPosts(
             @PathVariable String name
-    ) {
+    ) {// todo move this post service method in the subreddit service and you dont need the postservice here anymore
         List<PostDto> posts =
                 postService.getPostsBySubreddit(name);
 

@@ -17,11 +17,13 @@ public class JwtConfig {
 
     @Bean
     public SecretKey jwtSecretKey(
+            // maybe dont give default value, better crash the system with a message
             @Value("${JWT_SECRET:development-secret-key-at-least-32-characters}")
             String secret
     ) {
         return new SecretKeySpec(
                 secret.getBytes(StandardCharsets.UTF_8),
+                // todo move algorithm as a parameter like the secret
                 "HmacSHA256"
         );
     }

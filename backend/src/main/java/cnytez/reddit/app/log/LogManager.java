@@ -15,7 +15,7 @@ public class LogManager {
     public LogManager(List<Logger> loggers) {
         this.loggers = new ArrayList<>(loggers);
     }
-
+//todo add a parameter or just create different methods with log level (error, warning, info, debug etc.)
     public void log(String message) {
         LocalDateTime timeStamp = LocalDateTime.now();
         for (Logger logger : loggers) {

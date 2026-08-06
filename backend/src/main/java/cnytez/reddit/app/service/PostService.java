@@ -23,7 +23,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PostService {
-
+// todo try to inject only your own repository. other repositories should be accessed via their services
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
     private final CommentRepository commentRepository;
@@ -149,7 +149,7 @@ public class PostService {
         }
 
         VoteType newVoteType;
-
+// todo
         if ("up".equalsIgnoreCase(request.voteType())) {
             newVoteType = VoteType.UPVOTE;
         } else if ("down".equalsIgnoreCase(request.voteType())) {
