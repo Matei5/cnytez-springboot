@@ -1,0 +1,11 @@
+services:
+  image-server:
+    container_name: image-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8123:8123"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=
+    restart: unless-stopped

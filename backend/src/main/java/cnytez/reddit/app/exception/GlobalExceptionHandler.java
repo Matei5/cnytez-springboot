@@ -101,6 +101,20 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InternalServerErrorException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidation(
+            InternalServerErrorException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "INTERNAL_SERVER_ERROR",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
     private ResponseEntity<ApiErrorResponse> errorResponse(
             HttpStatus status,
             String code,

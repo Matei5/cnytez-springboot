@@ -4,8 +4,7 @@ import cnytez.reddit.app.dto.UpdatePostRequest;
 import cnytez.reddit.app.dto.CreatePostRequest;
 import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.VoteRequest;
-import cnytez.reddit.app.exception.BadRequestException;
-import cnytez.reddit.app.exception.ResourceNotFoundException;
+import cnytez.reddit.app.exception.*;
 import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.*;
 import cnytez.reddit.app.repository.CommentRepository;
@@ -34,6 +33,7 @@ public class PostService {
     private final SubredditRepository subredditRepository;
     private final LogManager logManager;
     private final CurrentUserService currentUserService;
+    private final ImageUploadService imageUploadService;
 
     public List<PostDto> getAllPosts() {
         return postRepository.findAllByOrderByCreationDateDesc().stream()
@@ -64,10 +64,21 @@ public class PostService {
         Subreddit subreddit = subredditRepository.findByName(request.subreddit())
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with name: " + request.subreddit()));
 
+        String imageUrl = null;
+        if (request.image() != null) {
+            try {
+                imageUrl = imageUploadService.sendImageToServer(request.image(), request.filter());
+            } catch (IllegalArgumentException | RejectedFileException e) {
+                throw new BadRequestException("Failed to process the image: " + e.getMessage());
+            } catch (ImageServerFailureException e) {
+                throw new InternalServerErrorException("Failed to process the image: " + e.getMessage());
+            }
+        }
+
         Post post = Post.builder()
                 .title(request.title())
                 .text(request.content())
-                .image(null)
+                .image(imageUrl)
                 .owner(owner)
                 .subreddit(subreddit)
                 .creationDate(Instant.now())

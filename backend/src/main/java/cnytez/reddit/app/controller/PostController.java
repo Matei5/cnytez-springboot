@@ -54,14 +54,6 @@ public class PostController {
 
 
 
-    // POST /api/posts
-//    @PostMapping
-//    public ResponseEntity<ApiResponse<PostDto>> createPost(@RequestBody CreatePostRequest request) {
-//        PostDto post = postService.createPost(request);
-//        ApiResponse<PostDto> response = new ApiResponse<>(true, post);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-//    }
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PostDto>> createPost(
             @Valid @ModelAttribute CreatePostRequest request
