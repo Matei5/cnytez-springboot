@@ -4,8 +4,9 @@ import cnytez.reddit.app.exception.ImageServerFailureException;
 import cnytez.reddit.app.exception.RejectedFileException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
@@ -24,14 +25,13 @@ public class ImageUploadService {
             throw new IllegalArgumentException("File must not be empty");
         }
 
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("file", file.getResource())
-                .filename(file.getOriginalFilename());
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", file.getResource());
 
-        return restClient.post()
+        String url = restClient.post()
                 .uri(targetUrl)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(builder.build())
+                .body(body)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
                     String errorBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
@@ -42,5 +42,12 @@ public class ImageUploadService {
                     throw new ImageServerFailureException("Internal server issue: " + response.getStatusCode() + " " + errorBody);
                 }))
                 .body(String.class);
+
+        // Remove extra quotes from the beginning and the end
+        if (url != null) {
+            url = url.substring(1, url.length() - 1);
+        }
+
+        return url;
     }
 }
