@@ -7,8 +7,7 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/deploy-backend.yml"
-
-workflow_dispatch:
+  workflow_dispatch:
 
 concurrency:
   group: backend-production
@@ -44,5 +43,4 @@ jobs:
             -o BatchMode=yes \
             -o ConnectTimeout=15 \
             "$EC2_USER@$EC2_HOST" \
-            "/home/ec2-user/deploy-backend.sh"
             "/home/ec2-user/deploy-backend.sh"
