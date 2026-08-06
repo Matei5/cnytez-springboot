@@ -241,12 +241,20 @@ public class PostService {
                     return "down";
                 })
                 .orElse(null);
+
+        Filter filter = post.getFilter();
+        Integer filterId = null;
+
+        if (filter != null) {
+            filterId = filter.getId();
+        }
+
         return new PostDto(
                 post.getId(),
                 post.getTitle(),
                 post.getText(),
                 post.getImage(),
-                post.getFilter().getId(),
+                filterId,
                 post.getOwner().getUsername(),
                 post.getSubreddit().getName(),
                 (int) upvotes,
