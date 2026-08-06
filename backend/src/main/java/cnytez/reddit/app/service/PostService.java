@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import cnytez.reddit.app.dto.VoteResponse;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -70,8 +70,8 @@ public class PostService {
                 .image(null)
                 .owner(owner)
                 .subreddit(subreddit)
-                .creationDate(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .creationDate(Instant.now())
+                .updatedAt(null)
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -110,7 +110,7 @@ public class PostService {
             post.setText(request.content());
         }
 
-        post.setUpdatedAt(LocalDateTime.now());
+        post.setUpdatedAt(Instant.now());
 
         Post savedPost = postRepository.save(post);
         return toDto(savedPost);
@@ -179,8 +179,9 @@ public class PostService {
         post.setTitle("[deleted by user]");
         post.setText(null);
         post.setImage(null);
-        post.setDeletionDate(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
+        Instant now = Instant.now();
+        post.setDeletionDate(now);
+        post.setUpdatedAt(now);
 
         postRepository.save(post);
 
