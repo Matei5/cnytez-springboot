@@ -3,7 +3,7 @@ package cnytez.reddit.app.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -26,11 +26,11 @@ public class Comment {
 
 
     @Column(nullable = false)
-    private LocalDateTime creationDate;
+    private Instant creationDate;
 
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    private LocalDateTime deletionDate;
+    private Instant deletionDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
