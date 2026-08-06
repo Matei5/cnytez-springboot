@@ -23,6 +23,7 @@ services:
         condition: service_healthy
     # prevent Docker logs from filling up EC2 disk
     logging:
+      driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
@@ -45,6 +46,7 @@ services:
       timeout: 5s
       retries: 10
     logging:
+      driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
