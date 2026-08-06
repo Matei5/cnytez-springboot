@@ -1,6 +1,6 @@
 package cnytez.reddit.app.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record PostDto(
@@ -16,7 +16,7 @@ public record PostDto(
         int score,
         int commentCount,
         String userVote,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        Instant createdAt,
+        Instant updatedAt
 ) {
 }

@@ -3,8 +3,8 @@ package cnytez.reddit.app.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
+import java.time.Instant;
 
 @Entity
 @Table(name = "posts")
@@ -29,11 +29,11 @@ public class Post {
     private Integer filter;
 
     @Column(nullable = false)
-    private LocalDateTime creationDate;
+    private Instant creationDate;
 
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    private LocalDateTime deletionDate;
+    private Instant deletionDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
