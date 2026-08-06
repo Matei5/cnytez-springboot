@@ -7,10 +7,7 @@ import cnytez.reddit.app.dto.VoteRequest;
 import cnytez.reddit.app.exception.*;
 import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.*;
-import cnytez.reddit.app.repository.CommentRepository;
-import cnytez.reddit.app.repository.PostRepository;
-import cnytez.reddit.app.repository.PostVoteRepository;
-import cnytez.reddit.app.repository.SubredditRepository;
+import cnytez.reddit.app.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +28,8 @@ public class PostService {
     private final PostVoteRepository postVoteRepository;
     private final CommentRepository commentRepository;
     private final SubredditRepository subredditRepository;
+    private final FilterRepository filterRepository;
+
     private final LogManager logManager;
     private final CurrentUserService currentUserService;
     private final ImageUploadService imageUploadService;
@@ -65,9 +64,14 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with name: " + request.subreddit()));
 
         String imageUrl = null;
+        Filter filter = null;
         if (request.image() != null) {
+            filter = filterRepository.findById(request.filterId()).orElseThrow(
+                    () -> new BadRequestException("Invalid filter id: " + request.filterId())
+            );
+
             try {
-                imageUrl = imageUploadService.sendImageToServer(request.image(), request.filter());
+                imageUrl = imageUploadService.sendImageToServer(request.image(), filter.getName());
             } catch (IllegalArgumentException | RejectedFileException e) {
                 throw new BadRequestException("Failed to process the image: " + e.getMessage());
             } catch (ImageServerFailureException e) {
@@ -79,6 +83,7 @@ public class PostService {
                 .title(request.title())
                 .text(request.content())
                 .image(imageUrl)
+                .filter(filter)
                 .owner(owner)
                 .subreddit(subreddit)
                 .creationDate(Instant.now())
@@ -241,7 +246,7 @@ public class PostService {
                 post.getTitle(),
                 post.getText(),
                 post.getImage(),
-                post.getFilter(),
+                post.getFilter().getId(),
                 post.getOwner().getUsername(),
                 post.getSubreddit().getName(),
                 (int) upvotes,

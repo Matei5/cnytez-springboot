@@ -24,6 +24,6 @@ public record CreatePostRequest(
 
         MultipartFile image,
 
-        Integer filter
+        Integer filterId
 ) {
 }

@@ -18,13 +18,10 @@ public class ImageUploadService {
         this.restClient = RestClient.create();
     }
 
-    public String sendImageToServer(MultipartFile file, Integer filter) {
-        String targetUrl = "http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123/";
+    public String sendImageToServer(MultipartFile file, String filterName) {
+        String targetUrl = "http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123/" + filterName;
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty");
-        }
-        if (filter != null) {
-            targetUrl = targetUrl + filter;
         }
 
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
