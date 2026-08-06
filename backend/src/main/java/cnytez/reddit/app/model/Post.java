@@ -26,7 +26,7 @@ public class Post {
 
     private String image;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "filter_id")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
