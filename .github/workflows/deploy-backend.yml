@@ -38,9 +38,13 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
+          # Strip any accidental whitespace/newlines from secrets
+          HOST=$(printf '%s' "$EC2_HOST" | tr -d '[:space:]')
+          USER=$(printf '%s' "$EC2_USER" | tr -d '[:space:]')
+
           ssh \
             -i ~/.ssh/ec2_key \
             -o BatchMode=yes \
             -o ConnectTimeout=15 \
-            "$EC2_USER@$EC2_HOST" \
+            "$USER@$HOST" \
             "/home/ec2-user/deploy-backend.sh"
