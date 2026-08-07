@@ -1,6 +1,6 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.dto.CreateSubredditRequest;
+import cnytez.reddit.app.request.CreateSubredditRequest;
 import cnytez.reddit.app.dto.SubredditDto;
 import cnytez.reddit.app.service.SubredditService;
 import lombok.RequiredArgsConstructor;
@@ -9,13 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
-import cnytez.reddit.app.dto.ApiListResponse;
-import cnytez.reddit.app.dto.ApiResponse;
+
+import cnytez.reddit.app.response.ApiListResponse;
+import cnytez.reddit.app.response.ApiResponse;
 import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.service.PostService;
-import cnytez.reddit.app.dto.ApiMessageResponse;
-import cnytez.reddit.app.dto.UpdateSubredditRequest;
+import cnytez.reddit.app.response.ApiMessageResponse;
+import cnytez.reddit.app.request.UpdateSubredditRequest;
 import jakarta.validation.Valid;
 
 @RestController

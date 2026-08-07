@@ -1,6 +1,6 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.dto.ApiResponse;
+import cnytez.reddit.app.response.ApiResponse;
 import cnytez.reddit.app.dto.FilterDto;
 import cnytez.reddit.app.service.FilterService;
 import lombok.RequiredArgsConstructor;

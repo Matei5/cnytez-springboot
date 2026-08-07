@@ -1,8 +1,8 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.dto.LoginRequest;
-import cnytez.reddit.app.dto.RegisterRequest;
-import cnytez.reddit.app.dto.AuthResponse;
+import cnytez.reddit.app.request.LoginRequest;
+import cnytez.reddit.app.request.RegisterRequest;
+import cnytez.reddit.app.response.AuthResponse;
 import cnytez.reddit.app.dto.AuthUserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.UnauthorizedException;
@@ -12,8 +12,8 @@ import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import cnytez.reddit.app.dto.ChangePasswordRequest;
-import cnytez.reddit.app.dto.UpdateProfileRequest;
+import cnytez.reddit.app.request.ChangePasswordRequest;
+import cnytez.reddit.app.request.UpdateProfileRequest;
 import cnytez.reddit.app.dto.UserProfileDto;
 import org.springframework.transaction.annotation.Transactional;
 

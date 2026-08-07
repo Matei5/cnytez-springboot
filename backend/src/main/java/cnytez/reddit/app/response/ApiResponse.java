@@ -1,4 +1,4 @@
-package cnytez.reddit.app.dto;
+package cnytez.reddit.app.response;
 
 public record ApiResponse<T>(
         boolean success,

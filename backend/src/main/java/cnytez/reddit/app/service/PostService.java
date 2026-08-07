@@ -1,9 +1,9 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.dto.UpdatePostRequest;
-import cnytez.reddit.app.dto.CreatePostRequest;
+import cnytez.reddit.app.request.UpdatePostRequest;
+import cnytez.reddit.app.request.CreatePostRequest;
 import cnytez.reddit.app.dto.PostDto;
-import cnytez.reddit.app.dto.VoteRequest;
+import cnytez.reddit.app.request.VoteRequest;
 import cnytez.reddit.app.exception.*;
 import cnytez.reddit.app.log.LogManager;
 import cnytez.reddit.app.model.*;
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import cnytez.reddit.app.dto.VoteResponse;
+import cnytez.reddit.app.response.VoteResponse;
 
 import java.time.Instant;
 import java.util.List;
