@@ -1,8 +1,8 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.request.CreateSubredditRequest;
+import cnytez.reddit.app.dto.request.CreateSubredditRequest;
 import cnytez.reddit.app.dto.SubredditDto;
-import cnytez.reddit.app.request.UpdateSubredditRequest;
+import cnytez.reddit.app.dto.request.UpdateSubredditRequest;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;

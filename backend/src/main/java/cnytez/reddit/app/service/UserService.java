@@ -1,6 +1,6 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.request.UpdateProfileRequest;
+import cnytez.reddit.app.dto.request.UpdateProfileRequest;
 import cnytez.reddit.app.dto.UserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;

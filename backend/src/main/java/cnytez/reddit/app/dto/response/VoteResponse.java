@@ -1,4 +1,4 @@
-package cnytez.reddit.app.response;
+package cnytez.reddit.app.dto.response;
 
 public record VoteResponse(
         int upvotes,

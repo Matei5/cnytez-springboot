@@ -1,4 +1,4 @@
-package cnytez.reddit.app.response;
+package cnytez.reddit.app.dto.response;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package cnytez.reddit.app.exception;
 
-import cnytez.reddit.app.response.ApiError;
-import cnytez.reddit.app.response.ApiErrorResponse;
-import cnytez.reddit.app.response.ErrorDetail;
+import cnytez.reddit.app.dto.response.ApiError;
+import cnytez.reddit.app.dto.response.ApiErrorResponse;
+import cnytez.reddit.app.dto.response.ErrorDetail;
 import cnytez.reddit.app.log.LogManager;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

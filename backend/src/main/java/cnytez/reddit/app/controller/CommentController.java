@@ -1,13 +1,13 @@
 package cnytez.reddit.app.controller;
 
 import cnytez.reddit.app.dto.*;
-import cnytez.reddit.app.request.CreateCommentRequest;
-import cnytez.reddit.app.request.UpdateCommentRequest;
-import cnytez.reddit.app.request.VoteRequest;
-import cnytez.reddit.app.response.ApiListResponse;
-import cnytez.reddit.app.response.ApiMessageResponse;
-import cnytez.reddit.app.response.ApiResponse;
-import cnytez.reddit.app.response.VoteResponse;
+import cnytez.reddit.app.dto.request.CreateCommentRequest;
+import cnytez.reddit.app.dto.request.UpdateCommentRequest;
+import cnytez.reddit.app.dto.request.VoteRequest;
+import cnytez.reddit.app.dto.response.ApiListResponse;
+import cnytez.reddit.app.dto.response.ApiMessageResponse;
+import cnytez.reddit.app.dto.response.ApiResponse;
+import cnytez.reddit.app.dto.response.VoteResponse;
 import cnytez.reddit.app.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

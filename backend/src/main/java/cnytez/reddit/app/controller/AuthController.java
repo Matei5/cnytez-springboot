@@ -1,18 +1,18 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.request.LoginRequest;
-import cnytez.reddit.app.request.RegisterRequest;
+import cnytez.reddit.app.dto.request.LoginRequest;
+import cnytez.reddit.app.dto.request.RegisterRequest;
 import cnytez.reddit.app.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import cnytez.reddit.app.response.ApiResponse;
-import cnytez.reddit.app.response.AuthResponse;
-import cnytez.reddit.app.response.ApiMessageResponse;
-import cnytez.reddit.app.request.ChangePasswordRequest;
-import cnytez.reddit.app.request.UpdateProfileRequest;
+import cnytez.reddit.app.dto.response.ApiResponse;
+import cnytez.reddit.app.dto.response.AuthResponse;
+import cnytez.reddit.app.dto.response.ApiMessageResponse;
+import cnytez.reddit.app.dto.request.ChangePasswordRequest;
+import cnytez.reddit.app.dto.request.UpdateProfileRequest;
 import cnytez.reddit.app.dto.UserProfileDto;
 
 @RestController
