@@ -6,6 +6,7 @@ import cnytez.reddit.app.dto.request.UpdateSubredditRequest;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
+import cnytez.reddit.app.mapper.SubredditMapper;
 import cnytez.reddit.app.model.Subreddit;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.PostRepository;
@@ -25,16 +26,21 @@ public class SubredditService {
     private final CurrentUserService currentUserService;
     private final PostRepository postRepository;
     private final LogManager logManager;
+    private final SubredditMapper subredditMapper;
 
 
     public List<SubredditDto> getAllSubreddits() {
         return subredditRepository.findAll().stream()
-                .map(this::toDto)
-                .toList();
+                .map(subreddit ->
+                        subredditMapper.toDto(
+                                subreddit,
+                                getPostCount(subreddit)
+                        )).toList();
     }
 
     public SubredditDto getSubredditByName(String name) {
-        return toDto(findSubredditByName(name));
+        Subreddit subreddit = findSubredditByName(name);
+        return subredditMapper.toDto(subreddit, getPostCount(subreddit));
     }
 
 
@@ -71,7 +77,7 @@ public class SubredditService {
                         + savedSubreddit.getName()
         );
 
-        return toDto(savedSubreddit);
+        return subredditMapper.toDto(savedSubreddit, getPostCount(subreddit));
     }
 
     @Transactional
@@ -103,7 +109,7 @@ public class SubredditService {
         Subreddit savedSubreddit =
                 subredditRepository.save(subreddit);
 
-        return toDto(savedSubreddit);
+        return subredditMapper.toDto(savedSubreddit, getPostCount(subreddit));
     }
 
     @Transactional
@@ -136,7 +142,6 @@ public class SubredditService {
         );
     }
 
-
     private Subreddit findSubredditByName(String name) {
         return subredditRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -144,19 +149,7 @@ public class SubredditService {
                 ));
     }
 
-    private SubredditDto toDto(Subreddit subreddit) {
-        long postCount =
-                postRepository.countBySubreddit(subreddit);
-
-        return new SubredditDto(
-                subreddit.getId(),
-                subreddit.getName(),
-                subreddit.getDisplayName(),
-                subreddit.getDescription(),
-                subreddit.getMembers().size(),
-                postCount,
-                subreddit.getIconUrl(),
-                subreddit.getCreationDate()
-        );
+    private long getPostCount(Subreddit subreddit) {
+        return postRepository.countBySubreddit(subreddit);
     }
 }

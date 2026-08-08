@@ -5,6 +5,7 @@ import cnytez.reddit.app.dto.internal.UserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
+import cnytez.reddit.app.mapper.UserMapper;
 import cnytez.reddit.app.model.Subreddit;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.SubredditRepository;
@@ -23,20 +24,21 @@ public class UserService {
     private final UserRepository userRepository;
     private final SubredditRepository subredditRepository;
     private final LogManager logManager;
+    private final UserMapper userMapper;
 
     public List<UserDto> getAllUsers() {
         return userRepository.findAllByDeletionDateIsNull().stream()
-                .map(this::toDto)
+                .map(userMapper::toDto)
                 .toList();
     }
 
     public UserDto getUserById(UUID id) {
-        return toDto(userRepository.findByIdAndDeletionDateIsNull(id)
+        return userMapper.toDto(userRepository.findByIdAndDeletionDateIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)));
     }
 
     public UserDto getUserByUsername(String username) {
-        return toDto(userRepository.findByUsernameAndDeletionDateIsNull(username)
+        return userMapper.toDto(userRepository.findByUsernameAndDeletionDateIsNull(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username)));
     }
 
@@ -55,7 +57,7 @@ public class UserService {
         }
 
         logManager.log("Update profile success! User with id " + id + " updated");
-        return toDto(userRepository.save(user));
+        return userMapper.toDto(userRepository.save(user));
     }
 
     @Transactional
@@ -85,18 +87,5 @@ public class UserService {
 
         userRepository.save(user);
         logManager.log("Delete user success! User with id " + id + " deleted");
-    }
-
-    private UserDto toDto(User user) {
-        String username = null;
-
-        if (user.getDeletionDate() != null) {
-            username = "[deleted]";
-        } else {
-            username = user.getUsername();
-        }
-
-        return new UserDto(user.getId(), user.getName(), username,
-                user.getEmail(), user.getProfilePhoto());
     }
 }
