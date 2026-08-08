@@ -6,6 +6,7 @@ import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.VoteRequest;
 import cnytez.reddit.app.exception.*;
 import cnytez.reddit.app.log.LogManager;
+import cnytez.reddit.app.mapper.PostMapper;
 import cnytez.reddit.app.model.*;
 import cnytez.reddit.app.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +34,19 @@ public class PostService {
     private final LogManager logManager;
     private final CurrentUserService currentUserService;
     private final ImageUploadService imageUploadService;
+    private final PostMapper postMapper;
 
     public List<PostDto> getAllPosts() {
         return postRepository.findAllByOrderByCreationDateDesc().stream()
-                .map(this::toDto)
-                .toList();
+                .map(post ->
+                    postMapper.toDto(
+                            post,
+                            getUpvotes(post),
+                            getDownvotes(post),
+                            getCommentCount(post),
+                            getUserVote(post),
+                            getPostFilterId(post)
+                    )).toList();
     }
 
     public List<PostDto> getPostsBySubreddit(String subredditName) {
@@ -49,12 +58,27 @@ public class PostService {
         return postRepository
                 .findBySubredditOrderByCreationDateDesc(subreddit)
                 .stream()
-                .map(this::toDto)
-                .toList();
+                .map(post ->
+                        postMapper.toDto(
+                                post,
+                                getUpvotes(post),
+                                getDownvotes(post),
+                                getCommentCount(post),
+                                getUserVote(post),
+                                getPostFilterId(post)
+                        )).toList();
     }
 
     public PostDto getPostById(UUID id) {
-        return toDto(findPostById(id));
+        Post post = findPostById(id);
+        return postMapper.toDto(
+                post,
+                getUpvotes(post),
+                getDownvotes(post),
+                getCommentCount(post),
+                getUserVote(post),
+                getPostFilterId(post)
+        );
     }
 
     @Transactional
@@ -100,7 +124,13 @@ public class PostService {
         postVoteRepository.save(creatorVote);
         logManager.log("Create post success! User with id " + owner.getId() +
                 " created post with id " + post.getId() + " for subreddit with id " + subreddit.getId());
-        return toDto(savedPost);
+        return postMapper.toDto(
+                savedPost,
+                getUpvotes(savedPost),
+                getDownvotes(savedPost),
+                getCommentCount(savedPost),
+                getUserVote(savedPost),
+                getPostFilterId(savedPost));
     }
 
     @Transactional
@@ -129,7 +159,13 @@ public class PostService {
         post.setUpdatedAt(Instant.now());
 
         Post savedPost = postRepository.save(post);
-        return toDto(savedPost);
+        return postMapper.toDto(
+                savedPost,
+                getUpvotes(savedPost),
+                getDownvotes(savedPost),
+                getCommentCount(savedPost),
+                getUserVote(savedPost),
+                getPostFilterId(savedPost));
     }
     @Transactional
     public VoteResponse vote(UUID postId, VoteRequest request) {
@@ -145,7 +181,14 @@ public class PostService {
 
         if ("none".equalsIgnoreCase(request.voteType())) {
             existingVote.ifPresent(postVoteRepository::delete);
-            return toVoteResponse(post);
+            return postMapper.toVoteResponse(postMapper.toDto(
+                    post,
+                    getUpvotes(post),
+                    getDownvotes(post),
+                    getCommentCount(post),
+                    getUserVote(post),
+                    getPostFilterId(post)
+            ));
         }
 
         VoteType newVoteType;
@@ -174,7 +217,14 @@ public class PostService {
             postVoteRepository.save(newVote);
         }
 
-        return toVoteResponse(post);
+        return postMapper.toVoteResponse(postMapper.toDto(
+                post,
+                getUpvotes(post),
+                getDownvotes(post),
+                getCommentCount(post),
+                getUserVote(post),
+                getPostFilterId(post)
+        ));
     }
 
     @Transactional
@@ -214,23 +264,20 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
     }
 
-
-    private VoteResponse toVoteResponse(Post post) {
-        PostDto postDto = toDto(post);
-
-        return new VoteResponse(
-                postDto.upvotes(),
-                postDto.downvotes(),
-                postDto.score(),
-                postDto.userVote()
-        );
+    private long getUpvotes(Post post) {
+        return postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);
     }
-    private PostDto toDto(Post post) {
-        long upvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);
-        long downvotes = postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
-        long commentCount = commentRepository.countByPost(post);
 
-        String userVote = currentUserService
+    private long getDownvotes(Post post) {
+        return postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
+    }
+
+    private long getCommentCount(Post post) {
+        return commentRepository.countByPost(post);
+    }
+
+    private String getUserVote(Post post) {
+        return currentUserService
                 .findCurrentUser()
                 .flatMap(user -> postVoteRepository.findByUserAndPost(user, post))
                 .map(vote -> {
@@ -241,7 +288,9 @@ public class PostService {
                     return "down";
                 })
                 .orElse(null);
+    }
 
+    private Integer getPostFilterId(Post post) {
         Filter filter = post.getFilter();
         Integer filterId = null;
 
@@ -249,21 +298,6 @@ public class PostService {
             filterId = filter.getId();
         }
 
-        return new PostDto(
-                post.getId(),
-                post.getTitle(),
-                post.getText(),
-                post.getImage(),
-                filterId,
-                post.getOwner().getUsername(),
-                post.getSubreddit().getName(),
-                (int) upvotes,
-                (int) downvotes,
-                (int) (upvotes - downvotes),
-                (int) commentCount,
-                userVote,
-                post.getCreationDate(),
-                post.getUpdatedAt()
-        );
+        return filterId;
     }
 }

@@ -4,6 +4,7 @@ import cnytez.reddit.app.dto.*;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
+import cnytez.reddit.app.mapper.CommentMapper;
 import cnytez.reddit.app.model.*;
 import cnytez.reddit.app.repository.CommentRepository;
 import cnytez.reddit.app.repository.CommentVoteRepository;
@@ -30,20 +31,34 @@ public class CommentService {
     private final UserRepository userRepository;
     private final LogManager logManager;
     private final CurrentUserService currentUserService;
+    private final CommentMapper commentMapper;
 
     public List<CommentDto> getCommentsByPost(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
         // Return only top-level comments; clients can fetch replies per comment
         return commentRepository.findByPostAndParentCommentIsNull(post).stream()
-                .map(this::toDto)
-                .toList();
+                .map(comment ->
+                        commentMapper.toDto(
+                                comment,
+                                getUpvotes(comment),
+                                getDownvotes(comment),
+                                getUserVote(comment),
+                                getReplies(comment)
+                        )).toList();
     }
 
 
 
     public CommentDto getCommentById(UUID id) {
-        return toDto(findCommentById(id));
+        Comment comment = findCommentById(id);
+        return commentMapper.toDto(
+                comment,
+                getUpvotes(comment),
+                getDownvotes(comment),
+                getUserVote(comment),
+                getReplies(comment)
+                );
     }
 
     @Transactional
@@ -110,7 +125,13 @@ public class CommentService {
                         + savedComment.getId()
         );
 
-        return toDto(savedComment);
+        return commentMapper.toDto(
+                savedComment,
+                getUpvotes(savedComment),
+                getDownvotes(savedComment),
+                getUserVote(savedComment),
+                getReplies(savedComment)
+        );
     }
     @Transactional
     public VoteResponse vote(UUID commentId, VoteRequest request) {
@@ -126,7 +147,15 @@ public class CommentService {
 
         if ("none".equalsIgnoreCase(request.voteType())) {
             existingVote.ifPresent(commentVoteRepository::delete);
-            return toVoteResponse(comment);
+            return commentMapper.toVoteResponse(
+                    commentMapper.toDto(
+                            comment,
+                            getUpvotes(comment),
+                            getDownvotes(comment),
+                            getUserVote(comment),
+                            getReplies(comment)
+                    )
+            );
         }
 
         VoteType newVoteType;
@@ -155,7 +184,13 @@ public class CommentService {
             commentVoteRepository.save(newVote);
         }
 
-        return toVoteResponse(comment);
+        return commentMapper.toVoteResponse(commentMapper.toDto(
+                comment,
+                getUpvotes(comment),
+                getDownvotes(comment),
+                getUserVote(comment),
+                getReplies(comment)
+        ));
     }
     @Transactional
     public void deleteComment(UUID commentId) {
@@ -215,37 +250,33 @@ public class CommentService {
 
         Comment savedComment = commentRepository.save(comment);
 
-        return toDto(savedComment);
+        return commentMapper.toDto(
+                savedComment,
+                getUpvotes(savedComment),
+                getDownvotes(savedComment),
+                getUserVote(savedComment),
+                getReplies(savedComment));
     }
-
-
-
 
     private Comment findCommentById(UUID id) {
         return commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + id));
     }
 
-
-    private VoteResponse toVoteResponse(Comment comment) {
-        CommentDto commentDto = toDto(comment);
-
-        return new VoteResponse(
-                commentDto.upvotes(),
-                commentDto.downvotes(),
-                commentDto.score(),
-                commentDto.userVote()
-        );
+    public long countCommentsByPost(UUID postId) {
+        return commentRepository.countByPost_Id(postId);
     }
 
-    private CommentDto toDto(Comment comment) {
-        long upvotes = commentVoteRepository
-                .countByCommentAndVoteType(comment, VoteType.UPVOTE);
+    private long getUpvotes(Comment comment) {
+        return commentVoteRepository.countByCommentAndVoteType(comment, VoteType.UPVOTE);
+    }
 
-        long downvotes = commentVoteRepository
-                .countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
+    private long getDownvotes(Comment comment) {
+        return commentVoteRepository.countByCommentAndVoteType(comment, VoteType.DOWNVOTE);
+    }
 
-        String userVote = currentUserService
+    private String getUserVote(Comment comment) {
+        return currentUserService
                 .findCurrentUser()
                 .flatMap(user ->
                         commentVoteRepository.findByUserAndComment(user, comment)
@@ -258,32 +289,19 @@ public class CommentService {
                     return "down";
                 })
                 .orElse(null);
-
-        List<CommentDto> replies = commentRepository
-                .findByParentComment(comment)
-                .stream()
-                .map(this::toDto)
-                .toList();
-
-        return new CommentDto(
-                comment.getId(),
-                comment.getPost().getId(),
-                comment.getParentComment() != null
-                        ? comment.getParentComment().getId()
-                        : null,
-                comment.getText(),
-                comment.getOwner().getUsername(),
-                (int) upvotes,
-                (int) downvotes,
-                (int) (upvotes - downvotes),
-                userVote,
-                comment.getCreationDate(),
-                comment.getUpdatedAt(),
-                replies
-        );
     }
 
-    public long countCommentsByPost(UUID postId) {
-        return commentRepository.countByPost_Id(postId);
+    private List<CommentDto> getReplies(Comment comment) {
+        return commentRepository
+                .findByParentComment(comment)
+                .stream()
+                .map(reply ->
+                        commentMapper.toDto(
+                                reply,
+                                getUpvotes(reply),
+                                getDownvotes(reply),
+                                getUserVote(reply),
+                                getReplies(reply)
+                        )).toList();
     }
 }

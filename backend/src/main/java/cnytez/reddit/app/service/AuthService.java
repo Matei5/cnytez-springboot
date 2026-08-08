@@ -3,10 +3,10 @@ package cnytez.reddit.app.service;
 import cnytez.reddit.app.dto.LoginRequest;
 import cnytez.reddit.app.dto.RegisterRequest;
 import cnytez.reddit.app.dto.AuthResponse;
-import cnytez.reddit.app.dto.AuthUserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.UnauthorizedException;
 import cnytez.reddit.app.log.LogManager;
+import cnytez.reddit.app.mapper.AuthMapper;
 import cnytez.reddit.app.model.User;
 import cnytez.reddit.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +26,7 @@ public class AuthService {
     private final LogManager logManager;
     private final JwtService jwtService;
     private final CurrentUserService currentUserService;
+    private final AuthMapper authMapper;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
@@ -46,7 +47,7 @@ public class AuthService {
         User saved = userRepository.save(user);
         logManager.log("Register success! User with id " + user.getId() + " registered");
         String token = jwtService.generateToken(saved.getUsername());
-        return toAuthResponse(saved, token);
+        return authMapper.toAuthResponse(saved, token);
     }
 
     public AuthResponse  login(LoginRequest request) {
@@ -59,12 +60,12 @@ public class AuthService {
 
         logManager.log("Login success! User with id " + user.getId() + " logged in");
         String token = jwtService.generateToken(user.getUsername());
-        return toAuthResponse(user, token);
+        return authMapper.toAuthResponse(user, token);
     }
 
     public UserProfileDto getProfile() {
         User user = currentUserService.getCurrentUser();
-        return toProfileDto(user);
+        return authMapper.toProfileDto(user);
     }
 
     @Transactional
@@ -87,7 +88,7 @@ public class AuthService {
                         + " updated profile"
         );
 
-        return toProfileDto(savedUser);
+        return authMapper.toProfileDto(savedUser);
     }
 
     @Transactional
@@ -114,22 +115,5 @@ public class AuthService {
                         + user.getId()
                         + " changed password"
         );
-    }
-
-    private UserProfileDto toProfileDto(User user) {
-        return new UserProfileDto(
-                user.getUsername(),
-                user.getEmail(),
-                user.getName(),
-                user.getProfilePhoto()
-        );
-    }
-    private AuthResponse toAuthResponse(User user, String token) {
-        AuthUserDto userDto = new AuthUserDto(
-                user.getUsername(),
-                user.getEmail()
-        );
-
-        return new AuthResponse(token, userDto);
     }
 }

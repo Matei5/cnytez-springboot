@@ -1,6 +1,7 @@
 package cnytez.reddit.app.service;
 
 import cnytez.reddit.app.dto.FilterDto;
+import cnytez.reddit.app.mapper.FilterMapper;
 import cnytez.reddit.app.model.Filter;
 import cnytez.reddit.app.repository.FilterRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,18 +13,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilterService {
     private final FilterRepository filterRepository;
+    private final FilterMapper filterMapper;
 
     public List<FilterDto> getAllFilters() {
         return filterRepository.findAll().stream()
-                .map(this::toDto)
+                .map(filterMapper::toDto)
                 .toList();
-    }
-
-    private FilterDto toDto(Filter filter) {
-        return new FilterDto(
-                filter.getId(),
-                filter.getName(),
-                filter.getLabel()
-        );
     }
 }
