@@ -2,7 +2,7 @@ package cnytez.reddit.app.service;
 
 import cnytez.reddit.app.dto.request.UpdatePostRequest;
 import cnytez.reddit.app.dto.request.CreatePostRequest;
-import cnytez.reddit.app.dto.PostDto;
+import cnytez.reddit.app.dto.internal.PostDto;
 import cnytez.reddit.app.dto.request.VoteRequest;
 import cnytez.reddit.app.exception.*;
 import cnytez.reddit.app.log.LogManager;

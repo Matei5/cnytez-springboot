@@ -2,7 +2,7 @@ package cnytez.reddit.app.controller;
 
 import cnytez.reddit.app.dto.response.ApiResponse;
 import cnytez.reddit.app.dto.request.CreatePostRequest;
-import cnytez.reddit.app.dto.PostDto;
+import cnytez.reddit.app.dto.internal.PostDto;
 import cnytez.reddit.app.dto.request.VoteRequest;
 import cnytez.reddit.app.service.PostService;
 import lombok.RequiredArgsConstructor;

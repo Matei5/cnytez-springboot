@@ -13,7 +13,7 @@ import cnytez.reddit.app.dto.response.AuthResponse;
 import cnytez.reddit.app.dto.response.ApiMessageResponse;
 import cnytez.reddit.app.dto.request.ChangePasswordRequest;
 import cnytez.reddit.app.dto.request.UpdateProfileRequest;
-import cnytez.reddit.app.dto.UserProfileDto;
+import cnytez.reddit.app.dto.internal.UserProfileDto;
 
 @RestController
 @RequestMapping("/auth")

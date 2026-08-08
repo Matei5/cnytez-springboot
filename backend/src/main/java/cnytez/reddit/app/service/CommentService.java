@@ -1,6 +1,6 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.dto.*;
+import cnytez.reddit.app.dto.internal.CommentDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;

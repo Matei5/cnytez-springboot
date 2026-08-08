@@ -1,22 +1,22 @@
-
-package cnytez.reddit.app.dto;
+package cnytez.reddit.app.dto.internal;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
-public record CommentDto(
+public record PostDto(
         UUID id,
-        UUID postId,
-        UUID parentId,
+        String title,
         String content,
+        String imageUrl,
+        Integer filter,
         String author,
+        String subreddit,
         int upvotes,
         int downvotes,
         int score,
+        int commentCount,
         String userVote,
         Instant createdAt,
-        Instant updatedAt,
-        List<CommentDto> replies
+        Instant updatedAt
 ) {
 }

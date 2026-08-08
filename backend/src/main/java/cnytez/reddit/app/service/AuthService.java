@@ -3,7 +3,7 @@ package cnytez.reddit.app.service;
 import cnytez.reddit.app.dto.request.LoginRequest;
 import cnytez.reddit.app.dto.request.RegisterRequest;
 import cnytez.reddit.app.dto.response.AuthResponse;
-import cnytez.reddit.app.dto.AuthUserDto;
+import cnytez.reddit.app.dto.response.AuthUserDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.UnauthorizedException;
 import cnytez.reddit.app.log.LogManager;
@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import cnytez.reddit.app.dto.request.ChangePasswordRequest;
 import cnytez.reddit.app.dto.request.UpdateProfileRequest;
-import cnytez.reddit.app.dto.UserProfileDto;
+import cnytez.reddit.app.dto.internal.UserProfileDto;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service

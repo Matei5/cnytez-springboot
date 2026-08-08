@@ -1,6 +1,6 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.dto.*;
+import cnytez.reddit.app.dto.internal.CommentDto;
 import cnytez.reddit.app.dto.request.CreateCommentRequest;
 import cnytez.reddit.app.dto.request.UpdateCommentRequest;
 import cnytez.reddit.app.dto.request.VoteRequest;

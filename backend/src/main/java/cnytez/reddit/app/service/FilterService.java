@@ -1,6 +1,6 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.dto.FilterDto;
+import cnytez.reddit.app.dto.internal.FilterDto;
 import cnytez.reddit.app.model.Filter;
 import cnytez.reddit.app.repository.FilterRepository;
 import lombok.RequiredArgsConstructor;

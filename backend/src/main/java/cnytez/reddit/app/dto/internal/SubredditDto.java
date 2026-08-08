@@ -1,4 +1,4 @@
-package cnytez.reddit.app.dto;
+package cnytez.reddit.app.dto.internal;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
