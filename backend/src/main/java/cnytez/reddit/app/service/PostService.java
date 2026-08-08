@@ -49,26 +49,6 @@ public class PostService {
                     )).toList();
     }
 
-    public List<PostDto> getPostsBySubreddit(String subredditName) {
-        Subreddit subreddit = subredditRepository.findByName(subredditName)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Subreddit not found: " + subredditName
-                ));
-
-        return postRepository
-                .findBySubredditOrderByCreationDateDesc(subreddit)
-                .stream()
-                .map(post ->
-                        postMapper.toDto(
-                                post,
-                                getUpvotes(post),
-                                getDownvotes(post),
-                                getCommentCount(post),
-                                getUserVote(post),
-                                getPostFilterId(post)
-                        )).toList();
-    }
-
     public PostDto getPostById(UUID id) {
         Post post = findPostById(id);
         return postMapper.toDto(
@@ -264,19 +244,19 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
     }
 
-    private long getUpvotes(Post post) {
+    long getUpvotes(Post post) {
         return postVoteRepository.countByPostAndVoteType(post, VoteType.UPVOTE);
     }
 
-    private long getDownvotes(Post post) {
+    long getDownvotes(Post post) {
         return postVoteRepository.countByPostAndVoteType(post, VoteType.DOWNVOTE);
     }
 
-    private long getCommentCount(Post post) {
+    long getCommentCount(Post post) {
         return commentRepository.countByPost(post);
     }
 
-    private String getUserVote(Post post) {
+    String getUserVote(Post post) {
         return currentUserService
                 .findCurrentUser()
                 .flatMap(user -> postVoteRepository.findByUserAndPost(user, post))
@@ -290,7 +270,7 @@ public class PostService {
                 .orElse(null);
     }
 
-    private Integer getPostFilterId(Post post) {
+    Integer getPostFilterId(Post post) {
         Filter filter = post.getFilter();
         Integer filterId = null;
 

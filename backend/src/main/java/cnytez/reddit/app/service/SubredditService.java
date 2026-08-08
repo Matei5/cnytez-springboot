@@ -1,11 +1,13 @@
 package cnytez.reddit.app.service;
 
 import cnytez.reddit.app.dto.CreateSubredditRequest;
+import cnytez.reddit.app.dto.PostDto;
 import cnytez.reddit.app.dto.SubredditDto;
 import cnytez.reddit.app.dto.UpdateSubredditRequest;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
+import cnytez.reddit.app.mapper.PostMapper;
 import cnytez.reddit.app.mapper.SubredditMapper;
 import cnytez.reddit.app.model.Subreddit;
 import cnytez.reddit.app.model.User;
@@ -24,9 +26,11 @@ public class SubredditService {
 
     private final SubredditRepository subredditRepository;
     private final CurrentUserService currentUserService;
+    private final PostService postService;
     private final PostRepository postRepository;
     private final LogManager logManager;
     private final SubredditMapper subredditMapper;
+    private final PostMapper postMapper;
 
 
     public List<SubredditDto> getAllSubreddits() {
@@ -147,6 +151,26 @@ public class SubredditService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Subreddit not found: " + name
                 ));
+    }
+
+    public List<PostDto> getPostsBySubreddit(String subredditName) {
+        Subreddit subreddit = subredditRepository.findByName(subredditName)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Subreddit not found: " + subredditName
+                ));
+
+        return postRepository
+                .findBySubredditOrderByCreationDateDesc(subreddit)
+                .stream()
+                .map(post ->
+                        postMapper.toDto(
+                                post,
+                                postService.getUpvotes(post),
+                                postService.getDownvotes(post),
+                                postService.getCommentCount(post),
+                                postService.getUserVote(post),
+                                postService.getPostFilterId(post)
+                        )).toList();
     }
 
     private long getPostCount(Subreddit subreddit) {

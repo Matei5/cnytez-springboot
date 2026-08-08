@@ -9,11 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 import cnytez.reddit.app.dto.ApiListResponse;
 import cnytez.reddit.app.dto.ApiResponse;
 import cnytez.reddit.app.dto.PostDto;
-import cnytez.reddit.app.service.PostService;
 import cnytez.reddit.app.dto.ApiMessageResponse;
 import cnytez.reddit.app.dto.UpdateSubredditRequest;
 import jakarta.validation.Valid;
@@ -24,7 +22,6 @@ import jakarta.validation.Valid;
 public class SubredditController {
 
     private final SubredditService subredditService;
-    private final PostService postService;
 
     @GetMapping
     public ResponseEntity<ApiListResponse<SubredditDto>> getAllSubreddits() {
@@ -60,7 +57,7 @@ public class SubredditController {
             @PathVariable String name
     ) {
         List<PostDto> posts =
-                postService.getPostsBySubreddit(name);
+                subredditService.getPostsBySubreddit(name);
 
         ApiResponse<List<PostDto>> response =
                 new ApiResponse<>(true, posts);
