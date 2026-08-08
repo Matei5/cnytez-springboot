@@ -1,6 +1,6 @@
 package cnytez.reddit.app.mapper;
 
-import cnytez.reddit.app.dto.UserDto;
+import cnytez.reddit.app.dto.internal.UserDto;
 import cnytez.reddit.app.model.User;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;

@@ -1,8 +1,8 @@
 package cnytez.reddit.app.mapper;
 
-import cnytez.reddit.app.dto.AuthResponse;
-import cnytez.reddit.app.dto.AuthUserDto;
-import cnytez.reddit.app.dto.UserProfileDto;
+import cnytez.reddit.app.dto.response.AuthResponse;
+import cnytez.reddit.app.dto.response.AuthUserDto;
+import cnytez.reddit.app.dto.internal.UserProfileDto;
 import cnytez.reddit.app.model.User;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
