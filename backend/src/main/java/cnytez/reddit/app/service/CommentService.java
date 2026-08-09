@@ -1,6 +1,6 @@
 package cnytez.reddit.app.service;
 
-import cnytez.reddit.app.dto.*;
+import cnytez.reddit.app.dto.internal.CommentDto;
 import cnytez.reddit.app.exception.BadRequestException;
 import cnytez.reddit.app.exception.ResourceNotFoundException;
 import cnytez.reddit.app.log.LogManager;
@@ -10,6 +10,10 @@ import cnytez.reddit.app.repository.CommentRepository;
 import cnytez.reddit.app.repository.CommentVoteRepository;
 import cnytez.reddit.app.repository.PostRepository;
 import cnytez.reddit.app.repository.UserRepository;
+import cnytez.reddit.app.dto.request.CreateCommentRequest;
+import cnytez.reddit.app.dto.request.UpdateCommentRequest;
+import cnytez.reddit.app.dto.request.VoteRequest;
+import cnytez.reddit.app.dto.response.VoteResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

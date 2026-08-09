@@ -1,7 +1,7 @@
 package cnytez.reddit.app.mapper;
 
-import cnytez.reddit.app.dto.CommentDto;
-import cnytez.reddit.app.dto.VoteResponse;
+import cnytez.reddit.app.dto.internal.CommentDto;
+import cnytez.reddit.app.dto.response.VoteResponse;
 import cnytez.reddit.app.model.Comment;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;

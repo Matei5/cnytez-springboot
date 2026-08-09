@@ -1,7 +1,7 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.dto.UpdateProfileRequest;
-import cnytez.reddit.app.dto.UserDto;
+import cnytez.reddit.app.dto.request.UpdateProfileRequest;
+import cnytez.reddit.app.dto.internal.UserDto;
 import cnytez.reddit.app.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

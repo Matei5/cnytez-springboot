@@ -1,4 +1,4 @@
-package cnytez.reddit.app.dto;
+package cnytez.reddit.app.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

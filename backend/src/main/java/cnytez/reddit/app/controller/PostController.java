@@ -1,9 +1,9 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.dto.ApiResponse;
-import cnytez.reddit.app.dto.CreatePostRequest;
-import cnytez.reddit.app.dto.PostDto;
-import cnytez.reddit.app.dto.VoteRequest;
+import cnytez.reddit.app.dto.response.ApiResponse;
+import cnytez.reddit.app.dto.request.CreatePostRequest;
+import cnytez.reddit.app.dto.internal.PostDto;
+import cnytez.reddit.app.dto.request.VoteRequest;
 import cnytez.reddit.app.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import cnytez.reddit.app.dto.UpdatePostRequest;
+import cnytez.reddit.app.dto.request.UpdatePostRequest;
 import jakarta.validation.Valid;
-import cnytez.reddit.app.dto.ApiMessageResponse;
-import cnytez.reddit.app.dto.VoteResponse;
+import cnytez.reddit.app.dto.response.ApiMessageResponse;
+import cnytez.reddit.app.dto.response.VoteResponse;
 
 @RestController
 @RequestMapping("/posts")

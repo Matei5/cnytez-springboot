@@ -1,7 +1,7 @@
 package cnytez.reddit.app.controller;
 
-import cnytez.reddit.app.dto.ApiResponse;
-import cnytez.reddit.app.dto.FilterDto;
+import cnytez.reddit.app.dto.response.ApiResponse;
+import cnytez.reddit.app.dto.internal.FilterDto;
 import cnytez.reddit.app.service.FilterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
