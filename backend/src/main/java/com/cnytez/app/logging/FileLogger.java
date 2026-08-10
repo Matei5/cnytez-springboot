@@ -1,4 +1,4 @@
-package com.cnytez.app.log;
+package com.cnytez.app.logging;
 
 import lombok.NoArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -10,7 +10,7 @@ import java.io.IOException;
 public class FileLogger implements Logger {
     @Override
     @Async("logExecutor")
-    public void log(String message) {
+    public void log(String message, LogLevel level) {
         try (FileWriter writer = new FileWriter("app.log", true)) {
             writer.write(message + "\n");
         } catch (IOException e) {

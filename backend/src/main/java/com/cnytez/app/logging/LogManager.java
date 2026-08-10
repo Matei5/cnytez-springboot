@@ -1,4 +1,4 @@
-package com.cnytez.app.log;
+package com.cnytez.app.logging;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,10 +16,10 @@ public class LogManager {
         this.loggers = new ArrayList<>(loggers);
     }
 
-    public void log(String message) {
+    public void log(String message, LogLevel level) {
         LocalDateTime timeStamp = LocalDateTime.now();
         for (Logger logger : loggers) {
-            logger.log("[" + timeStamp + "] " + message);
+            logger.log(("[" + timeStamp + "] " + level + " " + message), level);
         }
     }
 }

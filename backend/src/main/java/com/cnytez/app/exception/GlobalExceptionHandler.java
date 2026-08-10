@@ -3,7 +3,8 @@ package com.cnytez.app.exception;
 import com.cnytez.app.dto.response.ApiError;
 import com.cnytez.app.dto.response.ApiErrorResponse;
 import com.cnytez.app.dto.response.ErrorDetail;
-import com.cnytez.app.log.LogManager;
+import com.cnytez.app.logging.LogLevel;
+import com.cnytez.app.logging.LogManager;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -122,7 +123,7 @@ public class GlobalExceptionHandler {
             List<ErrorDetail> details,
             HttpServletRequest request
     ) {
-        logManager.log(message);
+        logManager.log(message, LogLevel.ERROR);
 
         ApiError error = new ApiError(
                 code,

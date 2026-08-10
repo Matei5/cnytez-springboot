@@ -3,7 +3,8 @@ package com.cnytez.app.service;
 import com.cnytez.app.dto.internal.CommentDto;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.ResourceNotFoundException;
-import com.cnytez.app.log.LogManager;
+import com.cnytez.app.logging.LogLevel;
+import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.CommentMapper;
 import com.cnytez.app.model.*;
 import com.cnytez.app.repository.CommentRepository;
@@ -124,7 +125,8 @@ public class CommentService {
                 "Create comment success! User with id "
                         + owner.getId()
                         + " created comment with id "
-                        + savedComment.getId()
+                        + savedComment.getId(),
+                LogLevel.INFO
         );
 
         return commentMapper.toDto(
@@ -223,7 +225,8 @@ public class CommentService {
                 "Delete comment success! User with id "
                         + currentUser.getId()
                         + " deleted comment with id "
-                        + commentId
+                        + commentId,
+                LogLevel.INFO
         );
     }
 
