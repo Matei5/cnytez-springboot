@@ -1,4 +1,4 @@
-package com.cnytez.app.log;
+package com.cnytez.app.logging;
 
 import lombok.NoArgsConstructor;
 

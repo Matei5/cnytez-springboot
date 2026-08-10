@@ -5,7 +5,7 @@ import com.cnytez.app.dto.internal.SubredditDto;
 import com.cnytez.app.dto.request.UpdateSubredditRequest;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.ResourceNotFoundException;
-import com.cnytez.app.log.LogManager;
+import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.SubredditMapper;
 import com.cnytez.app.model.Subreddit;
 import com.cnytez.app.model.User;

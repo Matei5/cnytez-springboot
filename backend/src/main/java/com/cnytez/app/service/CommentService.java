@@ -3,7 +3,7 @@ package com.cnytez.app.service;
 import com.cnytez.app.dto.internal.CommentDto;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.ResourceNotFoundException;
-import com.cnytez.app.log.LogManager;
+import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.CommentMapper;
 import com.cnytez.app.model.*;
 import com.cnytez.app.repository.CommentRepository;

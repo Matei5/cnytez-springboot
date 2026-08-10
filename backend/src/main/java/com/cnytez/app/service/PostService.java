@@ -5,7 +5,7 @@ import com.cnytez.app.dto.request.CreatePostRequest;
 import com.cnytez.app.dto.internal.PostDto;
 import com.cnytez.app.dto.request.VoteRequest;
 import com.cnytez.app.exception.*;
-import com.cnytez.app.log.LogManager;
+import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.PostMapper;
 import com.cnytez.app.model.*;
 import com.cnytez.app.repository.*;

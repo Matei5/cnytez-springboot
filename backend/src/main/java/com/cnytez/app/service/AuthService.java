@@ -5,7 +5,7 @@ import com.cnytez.app.dto.request.RegisterRequest;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.UnauthorizedException;
-import com.cnytez.app.log.LogManager;
+import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.AuthMapper;
 import com.cnytez.app.model.User;
 import com.cnytez.app.repository.UserRepository;
