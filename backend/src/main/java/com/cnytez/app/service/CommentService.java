@@ -15,7 +15,6 @@ import com.cnytez.app.dto.request.UpdateCommentRequest;
 import com.cnytez.app.dto.request.VoteRequest;
 import com.cnytez.app.dto.response.VoteResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommentService {

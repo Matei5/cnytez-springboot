@@ -10,18 +10,15 @@ import com.cnytez.app.mapper.PostMapper;
 import com.cnytez.app.model.*;
 import com.cnytez.app.repository.*;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.cnytez.app.dto.response.VoteResponse;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
