@@ -268,7 +268,7 @@ public class CommentService {
     }
 
     public long countCommentsByPost(UUID postId) {
-        return commentRepository.countByPost_Id(postId);
+        return commentRepository.countByPostId(postId);
     }
 
     private long getUpvotes(Comment comment) {

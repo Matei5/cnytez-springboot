@@ -7,8 +7,8 @@ public record UpdateProfileRequest(
 
         @Pattern(
                 regexp = "^https?://.+$",
-                message = "Avatar URL must use HTTP or HTTPS."
+                message = "Profile photo URL must use HTTP or HTTPS."
         )
-        String avatarUrl
+        String profilePhotoURL
 ) {
 }
