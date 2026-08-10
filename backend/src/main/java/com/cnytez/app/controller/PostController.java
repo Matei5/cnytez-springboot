@@ -30,13 +30,7 @@ public class PostController {
     public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts(
             @RequestParam(required = false) String subreddit
     ) {
-        List<PostDto> posts;
-
-        if (subreddit == null || subreddit.isBlank()) {
-            posts = postService.getAllPosts();
-        } else {
-            posts = postService.getPostsBySubreddit(subreddit);
-        }
+        List<PostDto> posts = postService.getAllPostsOrGetPostsBySubreddit(subreddit);
 
         ApiResponse<List<PostDto>> response = new ApiResponse<>(true, posts);
 
