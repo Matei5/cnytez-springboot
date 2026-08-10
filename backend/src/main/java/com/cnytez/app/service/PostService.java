@@ -193,11 +193,9 @@ public class PostService {
 
         VoteType newVoteType;
 
-        if ("up".equalsIgnoreCase(request.voteType())) {
-            newVoteType = VoteType.UPVOTE;
-        } else if ("down".equalsIgnoreCase(request.voteType())) {
-            newVoteType = VoteType.DOWNVOTE;
-        } else {
+        try {
+            newVoteType = VoteType.fromValue(request.voteType());
+        } catch (IllegalArgumentException e) {
             throw new BadRequestException(
                     "Vote type must be up, down or none."
             );
@@ -281,13 +279,7 @@ public class PostService {
         return currentUserService
                 .findCurrentUser()
                 .flatMap(user -> postVoteRepository.findByUserAndPost(user, post))
-                .map(vote -> {
-                    if (vote.getVoteType() == VoteType.UPVOTE) {
-                        return "up";
-                    }
-
-                    return "down";
-                })
+                .map(vote -> vote.getVoteType().getValue())
                 .orElse(null);
     }
 
