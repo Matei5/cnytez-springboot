@@ -4,6 +4,7 @@ import com.cnytez.app.dto.request.UpdateProfileRequest;
 import com.cnytez.app.dto.internal.UserDto;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.ResourceNotFoundException;
+import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.UserMapper;
 import com.cnytez.app.model.Subreddit;
@@ -56,7 +57,7 @@ public class UserService {
             user.setProfilePhotoURL(request.profilePhotoURL());
         }
 
-        logManager.log("Update profile success! User with id " + id + " updated");
+        logManager.log("Update profile success! User with id " + id + " updated", LogLevel.INFO);
         return userMapper.toDto(userRepository.save(user));
     }
 
@@ -86,6 +87,6 @@ public class UserService {
         user.setDeletionDate(LocalDateTime.now());
 
         userRepository.save(user);
-        logManager.log("Delete user success! User with id " + id + " deleted");
+        logManager.log("Delete user success! User with id " + id + " deleted", LogLevel.INFO);
     }
 }

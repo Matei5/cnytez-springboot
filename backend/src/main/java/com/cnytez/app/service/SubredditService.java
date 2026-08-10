@@ -5,6 +5,7 @@ import com.cnytez.app.dto.internal.SubredditDto;
 import com.cnytez.app.dto.request.UpdateSubredditRequest;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.ResourceNotFoundException;
+import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.SubredditMapper;
 import com.cnytez.app.model.Subreddit;
@@ -74,7 +75,8 @@ public class SubredditService {
                 "Create subreddit success! User with id "
                         + owner.getId()
                         + " created subreddit "
-                        + savedSubreddit.getName()
+                        + savedSubreddit.getName(),
+                LogLevel.INFO
         );
 
         return subredditMapper.toDto(savedSubreddit, getPostCount(subreddit));
@@ -138,7 +140,8 @@ public class SubredditService {
                 "Delete subreddit success! User with id "
                         + currentUser.getId()
                         + " deleted subreddit "
-                        + name
+                        + name,
+                LogLevel.INFO
         );
     }
 

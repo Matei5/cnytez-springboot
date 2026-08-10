@@ -5,6 +5,7 @@ import com.cnytez.app.dto.request.CreatePostRequest;
 import com.cnytez.app.dto.internal.PostDto;
 import com.cnytez.app.dto.request.VoteRequest;
 import com.cnytez.app.exception.*;
+import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.PostMapper;
 import com.cnytez.app.model.*;
@@ -121,7 +122,8 @@ public class PostService {
                 .build();
         postVoteRepository.save(creatorVote);
         logManager.log("Create post success! User with id " + owner.getId() +
-                " created post with id " + post.getId() + " for subreddit with id " + subreddit.getId());
+                " created post with id " + post.getId() + " for subreddit with id " + subreddit.getId(),
+                LogLevel.INFO);
         return postMapper.toDto(
                 savedPost,
                 getUpvotes(savedPost),
@@ -253,7 +255,8 @@ public class PostService {
                 "Delete post success! User with id "
                         + currentUser.getId()
                         + " deleted post with id "
-                        + postId
+                        + postId,
+                LogLevel.INFO
         );
     }
 

@@ -5,6 +5,7 @@ import com.cnytez.app.dto.request.RegisterRequest;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.UnauthorizedException;
+import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.AuthMapper;
 import com.cnytez.app.model.User;
@@ -45,7 +46,7 @@ public class AuthService {
                 .build();
 
         User saved = userRepository.save(user);
-        logManager.log("Register success! User with id " + user.getId() + " registered");
+        logManager.log("Register success! User with id " + user.getId() + " registered", LogLevel.INFO);
         String token = jwtService.generateToken(saved.getUsername());
         return authMapper.toAuthResponse(saved, token);
     }
@@ -58,7 +59,7 @@ public class AuthService {
             throw new UnauthorizedException("Invalid username or password.");
         }
 
-        logManager.log("Login success! User with id " + user.getId() + " logged in");
+        logManager.log("Login success! User with id " + user.getId() + " logged in", LogLevel.INFO);
         String token = jwtService.generateToken(user.getUsername());
         return authMapper.toAuthResponse(user, token);
     }
@@ -85,7 +86,8 @@ public class AuthService {
         logManager.log(
                 "Update profile success! User with id "
                         + user.getId()
-                        + " updated profile"
+                        + " updated profile",
+                LogLevel.INFO
         );
 
         return authMapper.toProfileDto(savedUser);
@@ -113,7 +115,8 @@ public class AuthService {
         logManager.log(
                 "Password change success! User with id "
                         + user.getId()
-                        + " changed password"
+                        + " changed password",
+                LogLevel.INFO
         );
     }
 }
