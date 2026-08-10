@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.cnytez.app.dto.response.VoteResponse;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -279,5 +280,17 @@ public class PostService {
         }
 
         return filterId;
+    }
+
+    public List<PostDto> getAllPostsOrGetPostsBySubreddit(String subreddit){
+        List<PostDto> posts;
+
+        if (subreddit == null || subreddit.isBlank()) {
+            posts = this.getAllPosts();
+        } else {
+            posts = this.getPostsBySubreddit(subreddit);
+        }
+
+        return posts;
     }
 }
