@@ -2,11 +2,13 @@ package com.cnytez.app.service;
 
 import com.cnytez.app.dto.request.CreateSubredditRequest;
 import com.cnytez.app.dto.internal.SubredditDto;
+import com.cnytez.app.dto.internal.PostDto;
 import com.cnytez.app.dto.request.UpdateSubredditRequest;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.ResourceNotFoundException;
 import com.cnytez.app.log.LogManager;
 import com.cnytez.app.mapper.SubredditMapper;
+import com.cnytez.app.mapper.PostMapper;
 import com.cnytez.app.model.Subreddit;
 import com.cnytez.app.model.User;
 import com.cnytez.app.repository.PostRepository;
