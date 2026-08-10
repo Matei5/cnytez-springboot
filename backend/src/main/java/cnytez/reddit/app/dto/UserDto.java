@@ -7,5 +7,5 @@ public record UserDto(
         String name,
         String username,
         String email,
-        String profilePhoto
+        String profilePhotoURL
 ) {}
