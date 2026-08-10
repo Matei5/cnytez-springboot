@@ -52,8 +52,8 @@ public class UserService {
             user.setName(request.displayName());
         }
 
-        if (request.avatarUrl() != null) {
-            user.setProfilePhoto(request.avatarUrl());
+        if (request.profilePhotoURL() != null) {
+            user.setProfilePhotoURL(request.profilePhotoURL());
         }
 
         logManager.log("Update profile success! User with id " + id + " updated");
@@ -81,7 +81,7 @@ public class UserService {
         user.setUsername("[deleted_" + user.getId() + "]");
         user.setEmail("[deleted_" + user.getId() + "]");
         user.setPassword("deleted");
-        user.setProfilePhoto(null);
+        user.setProfilePhotoURL(null);
 
         user.setDeletionDate(LocalDateTime.now());
 
