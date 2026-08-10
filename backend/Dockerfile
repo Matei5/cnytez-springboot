@@ -7,8 +7,9 @@ COPY src ./src
 # run maven to compile to make the JAR file, skip tests
 RUN mvn clean package -DskipTests
 
-# stage two: run the JAR using Amazon Corretto (optimized for AWS EC2)
-FROM amazoncorretto:25
+# stage two: run the JAR in an Alpine Amazon Corretto image
+# mainly JRE, without unnecessary JDK tools, optimized for AWS EC2.
+FROM amazoncorretto:25-alpine
 WORKDIR /app
 # copy built JAR file from stage one
 COPY --from=build /app/target/*.jar app.jar
