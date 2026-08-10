@@ -41,7 +41,7 @@ public class AuthService {
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .profilePhoto(null)
+                .profilePhotoURL(null)
                 .build();
 
         User saved = userRepository.save(user);
@@ -76,8 +76,8 @@ public class AuthService {
             user.setName(request.displayName());
         }
 
-        if (request.avatarUrl() != null) {
-            user.setProfilePhoto(request.avatarUrl());
+        if (request.profilePhotoURL() != null) {
+            user.setProfilePhotoURL(request.profilePhotoURL());
         }
 
         User savedUser = userRepository.save(user);
