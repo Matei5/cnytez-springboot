@@ -5,7 +5,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cnytez.reddit</groupId>
+    <groupId>com.cnytez</groupId>
     <artifactId>cli-client</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 

@@ -1,0 +1,33 @@
+package com.cnytez.app.controller;
+
+import com.cnytez.app.dto.response.ApiResponse;
+import com.cnytez.app.dto.internal.FilterDto;
+import com.cnytez.app.service.FilterService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/filters")
+@RequiredArgsConstructor
+public class FilterController {
+    private final FilterService filterService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<FilterDto>>> getFilters() {
+        List<FilterDto> filters =
+                filterService.getAllFilters();
+
+        ApiResponse<List<FilterDto>> response =
+                new ApiResponse<>(
+                        true,
+                        filters
+                );
+
+        return ResponseEntity.ok(response);
+    }
+}
