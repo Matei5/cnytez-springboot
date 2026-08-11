@@ -1,7 +1,6 @@
 package com.cnytez.app.controller;
 
-import com.cnytez.app.dto.request.LoginRequest;
-import com.cnytez.app.dto.request.RegisterRequest;
+import com.cnytez.app.dto.request.*;
 import com.cnytez.app.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import com.cnytez.app.dto.response.ApiResponse;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.dto.response.ApiMessageResponse;
-import com.cnytez.app.dto.request.ChangePasswordRequest;
-import com.cnytez.app.dto.request.UpdateProfileRequest;
 import com.cnytez.app.dto.internal.UserProfileDto;
 
 @RestController
@@ -77,5 +74,17 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiMessageResponse> deleteUser(
+            @Valid @RequestBody DeleteUserRequest request
+    ) {
+        authService.deleteUser(request);
 
+        ApiMessageResponse response = new ApiMessageResponse(
+                true,
+                "User deleted successfully"
+        );
+
+        return ResponseEntity.ok(response);
+    }
 }
