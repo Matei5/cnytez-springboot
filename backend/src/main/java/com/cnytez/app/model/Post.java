@@ -8,7 +8,9 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "posts")
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +31,6 @@ public class Post {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "filter_id")
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private Filter filter;
 
     @Column(nullable = false)
@@ -42,12 +43,28 @@ public class Post {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subreddit_id", nullable = false)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private Subreddit subreddit;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        // used instanceof to ensure updated instance, not lazy loaded
+        if (!(o instanceof Post)) return false;
+
+        Post other = (Post) o;
+
+        // compare only if the id is not null (is in database)
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

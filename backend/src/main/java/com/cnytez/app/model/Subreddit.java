@@ -10,7 +10,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "subreddits")
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,7 +39,6 @@ public class Subreddit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private User owner;
 
     @ManyToMany
@@ -48,7 +49,6 @@ public class Subreddit {
     )
     @Builder.Default
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private Set<User> members = new HashSet<>();
 
     public void addMember(User user) {
@@ -58,4 +58,23 @@ public class Subreddit {
     public void removeMember(User user) {
         members.remove(user);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        // used instanceof to ensure updated instance, not lazy loaded
+        if (!(o instanceof Subreddit)) return false;
+
+        Subreddit other = (Subreddit) o;
+
+        // compare only if the id is not null (is in database)
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
 }
