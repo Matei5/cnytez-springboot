@@ -82,7 +82,7 @@ public class AuthController {
 
         ApiMessageResponse response = new ApiMessageResponse(
                 true,
-                "User deleted successfully"
+                "Account deleted successfully"
         );
 
         return ResponseEntity.ok(response);
