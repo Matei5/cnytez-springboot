@@ -12,7 +12,7 @@ public interface PostMapper {
     @Mapping(target = "content", source = "post.text")
     @Mapping(target = "imageUrl", source = "post.image")
     @Mapping(target = "filter", source = "filterId")
-    @Mapping(target = "author", expression = "java(post.getOwner().getUsername())")
+    @Mapping(target = "author", expression = "java(com.cnytez.app.mapper.UserDisplayResolver.resolveAuthor(post.getOwner()))")
     @Mapping(target = "subreddit", expression = "java(post.getSubreddit().getName())")
     @Mapping(target = "score", expression = "java((int)(upvotes - downvotes))")
     @Mapping(target = "createdAt", source = "post.creationDate")
