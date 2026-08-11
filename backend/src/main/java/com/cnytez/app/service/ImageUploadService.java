@@ -9,18 +9,24 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 import java.nio.charset.StandardCharsets;
 
 @Service
 public class ImageUploadService {
     private final RestClient restClient;
+    private final String imageServerUrl;
 
-    public ImageUploadService() {
+    public ImageUploadService(
+            @Value("${image-server.url}") String imageServerUrl
+            // takes it from YAML
+    ) {
         this.restClient = RestClient.create();
+        this.imageServerUrl = imageServerUrl;
     }
 
     public String sendImageToServer(MultipartFile file, String filterName) {
-        String targetUrl = "http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123/" + filterName;
+        String targetUrl = imageServerUrl + "/" + filterName;
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty");
         }
