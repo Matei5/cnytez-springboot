@@ -1,7 +1,6 @@
 package com.cnytez.app.service;
 
-import com.cnytez.app.dto.request.LoginRequest;
-import com.cnytez.app.dto.request.RegisterRequest;
+import com.cnytez.app.dto.request.*;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.exception.BadRequestException;
 import com.cnytez.app.exception.UnauthorizedException;
@@ -13,10 +12,10 @@ import com.cnytez.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.cnytez.app.dto.request.ChangePasswordRequest;
-import com.cnytez.app.dto.request.UpdateProfileRequest;
 import com.cnytez.app.dto.internal.UserProfileDto;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -116,6 +115,29 @@ public class AuthService {
                 "Password change success! User with id "
                         + user.getId()
                         + " changed password",
+                LogLevel.INFO
+        );
+    }
+
+    public void deleteUser(DeleteUserRequest request){
+        User user = currentUserService.getCurrentUser();
+
+        if (!passwordEncoder.matches(
+                request.password(),
+                user.getPassword()
+        )) {
+            throw new BadRequestException(
+                    "Current password is incorrect."
+            );
+        }
+
+        user.setDeletionDate(LocalDateTime.now());
+        userRepository.save(user);
+
+        logManager.log(
+                "User with id "
+                        + user.getId()
+                        + " deleted successfully!",
                 LogLevel.INFO
         );
     }
