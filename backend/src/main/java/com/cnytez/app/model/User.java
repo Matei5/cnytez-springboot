@@ -2,6 +2,8 @@ package com.cnytez.app.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.Instant;
 import java.util.UUID;
 
 import java.time.LocalDateTime;
@@ -32,6 +34,11 @@ public class User {
     private String password;
 
     private String profilePhotoURL;
+
+    @Column(nullable = false)
+    private Instant createdAt;
+
+    private Instant updatedAt;
 
     private LocalDateTime deletedAt;
 
