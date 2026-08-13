@@ -22,4 +22,7 @@ jobs:
         
     - name: Build with Maven
       working-directory: ./backend
-      run: ./mvnw -B package --file pom.xml
+      # chmod needed to make the mvnw script executable
+      run: | 
+        chmod +x ./mvnw # make the mvnw script executable
+        ./mvnw clean package --file pom.xml
