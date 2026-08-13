@@ -86,7 +86,7 @@ class PostServiceTest {
         Post post = Post.builder().id(UUID.randomUUID()).build();
         PostDto dto = new PostDto(post.getId(), "title", "content", null, null, null, null, 0, 0, 0, 0, null, null, null);
         
-        when(postRepository.findAllByOrderByCreationDateDesc()).thenReturn(java.util.List.of(post));
+        when(postRepository.findAllByOrderByCreatedAtDesc()).thenReturn(java.util.List.of(post));
         when(postVoteRepository.countByPostAndVoteType(eq(post), any())).thenReturn(0L);
         when(commentRepository.countByPost(post)).thenReturn(0L);
         when(currentUserService.findCurrentUser()).thenReturn(Optional.empty());
@@ -108,7 +108,7 @@ class PostServiceTest {
         PostDto dto = new PostDto(post.getId(), "title", "content", null, null, null, null, 0, 0, 0, 0, null, null, null);
         
         when(subredditRepository.findByName("testsub")).thenReturn(Optional.of(subreddit));
-        when(postRepository.findBySubredditOrderByCreationDateDesc(subreddit)).thenReturn(java.util.List.of(post));
+        when(postRepository.findBySubredditOrderByCreatedAtDesc(subreddit)).thenReturn(java.util.List.of(post));
         when(postVoteRepository.countByPostAndVoteType(eq(post), any())).thenReturn(0L);
         when(commentRepository.countByPost(post)).thenReturn(0L);
         when(currentUserService.findCurrentUser()).thenReturn(Optional.empty());
@@ -128,7 +128,7 @@ class PostServiceTest {
         Post post = Post.builder().id(UUID.randomUUID()).build();
         PostDto dto = new PostDto(post.getId(), "title", "content", null, null, null, null, 0, 0, 0, 0, null, null, null);
         
-        when(postRepository.findAllByOrderByCreationDateDesc()).thenReturn(java.util.List.of(post));
+        when(postRepository.findAllByOrderByCreatedAtDesc()).thenReturn(java.util.List.of(post));
         when(postVoteRepository.countByPostAndVoteType(eq(post), any())).thenReturn(0L);
         when(commentRepository.countByPost(post)).thenReturn(0L);
         when(currentUserService.findCurrentUser()).thenReturn(Optional.empty());

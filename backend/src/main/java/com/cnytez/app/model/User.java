@@ -33,7 +33,7 @@ public class User {
 
     private String profilePhotoURL;
 
-    private LocalDateTime deletionDate;
+    private LocalDateTime deletedAt;
 
     @Override
     public boolean equals(Object o) {

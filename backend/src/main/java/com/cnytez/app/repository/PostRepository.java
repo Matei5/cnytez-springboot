@@ -13,9 +13,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     List<Post> findBySubreddit(Subreddit subreddit);
 
-    List<Post> findBySubredditOrderByCreationDateDesc(Subreddit subreddit);
+    List<Post> findBySubredditOrderByCreatedAtDesc(Subreddit subreddit);
 
-    List<Post> findAllByOrderByCreationDateDesc();
+    List<Post> findAllByOrderByCreatedAtDesc();
 
     long countBySubreddit(Subreddit subreddit);
 

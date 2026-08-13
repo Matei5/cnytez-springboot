@@ -10,6 +10,6 @@ import org.mapstruct.Mapping;
 public interface SubredditMapper {
     @Mapping(target = "memberCount", expression = "java(subreddit.getMembers().size())")
     @Mapping(target = "postCount", source = "postCount")
-    @Mapping(target = "createdAt", source = "subreddit.creationDate")
+    @Mapping(target = "createdAt", source = "subreddit.createdAt")
     SubredditDto toDto(Subreddit subreddit, long postCount);
 }

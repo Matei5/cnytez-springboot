@@ -15,7 +15,7 @@ public interface PostMapper {
     @Mapping(target = "author", expression = "java(com.cnytez.app.mapper.UserDisplayResolver.resolveAuthor(post.getOwner()))")
     @Mapping(target = "subreddit", expression = "java(post.getSubreddit().getName())")
     @Mapping(target = "score", expression = "java((int)(upvotes - downvotes))")
-    @Mapping(target = "createdAt", source = "post.creationDate")
+    @Mapping(target = "createdAt", source = "post.createdAt")
     PostDto toDto(Post post,
                          long upvotes,
                          long downvotes,

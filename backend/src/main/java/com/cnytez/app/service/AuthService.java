@@ -29,7 +29,7 @@ public class AuthService {
     private final AuthMapper authMapper;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
+        if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
             throw new BadRequestException("Username '" + request.username() + "' is already taken.");
         }
         if (userRepository.existsByEmail(request.email())) {
@@ -51,7 +51,7 @@ public class AuthService {
     }
 
     public AuthResponse  login(LoginRequest request) {
-        User user = userRepository.findByUsernameAndDeletionDateIsNull(request.username())
+        User user = userRepository.findByUsernameAndDeletedAtIsNull(request.username())
                 .orElseThrow(() -> new UnauthorizedException("Invalid username or password."));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
@@ -131,7 +131,7 @@ public class AuthService {
             );
         }
 
-        user.setDeletionDate(LocalDateTime.now());
+        user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);
 
         logManager.log(
