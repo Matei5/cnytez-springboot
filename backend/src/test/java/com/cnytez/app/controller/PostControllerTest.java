@@ -94,7 +94,7 @@ class PostControllerTest {
                         .param("title", "New Title")
                         .param("content", "New Content")
                         .param("subreddit", "subreddit1")
-                        .param("filterId", "1")
+                        .param("filter", "1")
                 )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
