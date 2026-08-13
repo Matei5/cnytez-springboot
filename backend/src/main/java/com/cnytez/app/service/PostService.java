@@ -1,9 +1,10 @@
 package com.cnytez.app.service;
 
-import com.cnytez.app.dto.request.UpdatePostRequest;
-import com.cnytez.app.dto.request.CreatePostRequest;
 import com.cnytez.app.dto.internal.PostDto;
+import com.cnytez.app.dto.request.CreatePostRequest;
+import com.cnytez.app.dto.request.UpdatePostRequest;
 import com.cnytez.app.dto.request.VoteRequest;
+import com.cnytez.app.dto.response.VoteResponse;
 import com.cnytez.app.exception.*;
 import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
@@ -13,7 +14,6 @@ import com.cnytez.app.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.cnytez.app.dto.response.VoteResponse;
 
 import java.time.Instant;
 import java.util.List;
@@ -139,11 +139,11 @@ public class PostService {
         User currentUser = currentUserService.getCurrentUser();
 
         if (post.getDeletionDate() != null) {
-            throw new BadRequestException("Deleted posts cannot be edited.");
+            throw new UnprocessableEntityException("Deleted posts cannot be edited.");
         }
 
         if (!post.getOwner().getId().equals(currentUser.getId())) {
-            throw new BadRequestException(
+            throw new ForbiddenException(
                     "Only the post author can edit this post."
             );
         }
@@ -173,7 +173,7 @@ public class PostService {
         User currentUser = currentUserService.getCurrentUser();
 
         if (post.getDeletionDate() != null) {
-            throw new BadRequestException("Deleted posts cannot be voted.");
+            throw new UnprocessableEntityException("Deleted posts cannot be voted.");
         }
 
         Optional<PostVote> existingVote =
@@ -231,11 +231,11 @@ public class PostService {
         User currentUser = currentUserService.getCurrentUser();
 
         if (post.getDeletionDate() != null) {
-            throw new BadRequestException("Post is already deleted.");
+            throw new UnprocessableEntityException("Post is already deleted.");
         }
 
         if (!post.getOwner().getId().equals(currentUser.getId())) {
-            throw new BadRequestException(
+            throw new ForbiddenException(
                     "Only the post author can delete this post."
             );
         }
