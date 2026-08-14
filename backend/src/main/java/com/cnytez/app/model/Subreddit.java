@@ -34,7 +34,7 @@ public class Subreddit {
     private String iconUrl;
 
     @Column(nullable = false)
-    private LocalDateTime creationDate;
+    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)

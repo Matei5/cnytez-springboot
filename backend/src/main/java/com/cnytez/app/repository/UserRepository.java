@@ -10,11 +10,11 @@ import java.util.UUID;
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
 
-    Optional<User> findByUsernameAndDeletionDateIsNull(String username);
+    Optional<User> findByUsernameAndDeletedAtIsNull(String username);
 
     Optional<User> findByEmail(String email);
 
-    boolean existsByUsernameAndDeletionDateIsNull(String username);
+    boolean existsByUsernameAndDeletedAtIsNull(String username);
 
     boolean existsByEmail(String email);
 }

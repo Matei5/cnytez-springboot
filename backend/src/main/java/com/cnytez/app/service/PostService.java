@@ -36,7 +36,7 @@ public class PostService {
     private final PostMapper postMapper;
 
     public List<PostDto> getAllPosts() {
-        return postRepository.findAllByOrderByCreationDateDesc().stream()
+        return postRepository.findAllByOrderByCreatedAtDesc().stream()
                 .map(post ->
                     postMapper.toDto(
                             post,
@@ -55,7 +55,7 @@ public class PostService {
                 ));
 
         return postRepository
-                .findBySubredditOrderByCreationDateDesc(subreddit)
+                .findBySubredditOrderByCreatedAtDesc(subreddit)
                 .stream()
                 .map(post ->
                         postMapper.toDto(
@@ -109,7 +109,7 @@ public class PostService {
                 .filter(filter)
                 .owner(owner)
                 .subreddit(subreddit)
-                .creationDate(Instant.now())
+                .createdAt(Instant.now())
                 .updatedAt(null)
                 .build();
 
@@ -138,7 +138,7 @@ public class PostService {
         Post post = findPostById(postId);
         User currentUser = currentUserService.getCurrentUser();
 
-        if (post.getDeletionDate() != null) {
+        if (post.getDeletedAt() != null) {
             throw new UnprocessableEntityException("Deleted posts cannot be edited.");
         }
 
@@ -172,7 +172,7 @@ public class PostService {
         Post post = findPostById(postId);
         User currentUser = currentUserService.getCurrentUser();
 
-        if (post.getDeletionDate() != null) {
+        if (post.getDeletedAt() != null) {
             throw new UnprocessableEntityException("Deleted posts cannot be voted.");
         }
 
@@ -230,7 +230,7 @@ public class PostService {
         Post post = findPostById(postId);
         User currentUser = currentUserService.getCurrentUser();
 
-        if (post.getDeletionDate() != null) {
+        if (post.getDeletedAt() != null) {
             throw new UnprocessableEntityException("Post is already deleted.");
         }
 
@@ -244,7 +244,7 @@ public class PostService {
         post.setText(null);
         post.setImage(null);
         Instant now = Instant.now();
-        post.setDeletionDate(now);
+        post.setDeletedAt(now);
         post.setUpdatedAt(now);
 
         postRepository.save(post);

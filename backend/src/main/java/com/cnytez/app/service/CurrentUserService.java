@@ -38,6 +38,6 @@ public class CurrentUserService {
         String username = authentication.getName();
 
         return userRepository
-                .findByUsernameAndDeletionDateIsNull(username);
+                .findByUsernameAndDeletedAtIsNull(username);
     }
 }

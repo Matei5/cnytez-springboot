@@ -65,7 +65,7 @@ public class SubredditService {
                 .description(request.description())
                 .iconUrl(request.iconUrl())
                 .owner(owner)
-                .creationDate(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         subreddit.addMember(owner);

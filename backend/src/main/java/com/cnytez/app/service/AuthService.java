@@ -1,6 +1,5 @@
 package com.cnytez.app.service;
 
-import com.cnytez.app.dto.internal.UserProfileDto;
 import com.cnytez.app.dto.request.*;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.exception.BadRequestException;
@@ -14,6 +13,7 @@ import com.cnytez.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.cnytez.app.dto.internal.UserProfileDto;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -30,7 +30,7 @@ public class AuthService {
     private final AuthMapper authMapper;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
+        if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
             throw new ConflictException("Username '" + request.username() + "' is already taken.");
         }
         if (userRepository.existsByEmail(request.email())) {
@@ -52,7 +52,7 @@ public class AuthService {
     }
 
     public AuthResponse  login(LoginRequest request) {
-        User user = userRepository.findByUsernameAndDeletionDateIsNull(request.username())
+        User user = userRepository.findByUsernameAndDeletedAtIsNull(request.username())
                 .orElseThrow(() -> new UnauthorizedException("Invalid username or password."));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
@@ -132,7 +132,7 @@ public class AuthService {
             );
         }
 
-        user.setDeletionDate(LocalDateTime.now());
+        user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);
 
         logManager.log(

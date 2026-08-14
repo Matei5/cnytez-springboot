@@ -53,7 +53,7 @@ class AuthServiceTest {
         User savedUser = User.builder().id(UUID.randomUUID()).username("testuser").email("test@example.com").build();
         AuthResponse mockResponse = new AuthResponse("fake-token", new AuthUserDto("testuser", "test@example.com"));
 
-        when(userRepository.existsByUsernameAndDeletionDateIsNull(request.username())).thenReturn(false);
+        when(userRepository.existsByUsernameAndDeletedAtIsNull(request.username())).thenReturn(false);
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
@@ -76,7 +76,7 @@ class AuthServiceTest {
     void register_usernameTaken_throwsConflictException() {
         // arrange
         RegisterRequest request = new RegisterRequest("testuser", "test@example.com", "password123");
-        when(userRepository.existsByUsernameAndDeletionDateIsNull(request.username())).thenReturn(true);
+        when(userRepository.existsByUsernameAndDeletedAtIsNull(request.username())).thenReturn(true);
 
         // act & assert
         ConflictException exception = assertThrows(ConflictException.class, () -> {
@@ -94,7 +94,7 @@ class AuthServiceTest {
         User user = User.builder().id(UUID.randomUUID()).username("testuser").password("encoded-password").build();
         AuthResponse mockResponse = new AuthResponse("fake-token", new AuthUserDto("testuser", "test@example.com"));
 
-        when(userRepository.findByUsernameAndDeletionDateIsNull(request.username())).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameAndDeletedAtIsNull(request.username())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(true);
         when(jwtService.generateToken(user.getUsername())).thenReturn("fake-token");
         when(authMapper.toAuthResponse(user, "fake-token")).thenReturn(mockResponse);
@@ -111,7 +111,7 @@ class AuthServiceTest {
     void login_invalidUsername_throwsUnauthorizedException() {
         // arrange
         LoginRequest request = new LoginRequest("wronguser", "password123");
-        when(userRepository.findByUsernameAndDeletionDateIsNull(request.username())).thenReturn(Optional.empty());
+        when(userRepository.findByUsernameAndDeletedAtIsNull(request.username())).thenReturn(Optional.empty());
 
         // act & assert
         assertThrows(UnauthorizedException.class, () -> {
