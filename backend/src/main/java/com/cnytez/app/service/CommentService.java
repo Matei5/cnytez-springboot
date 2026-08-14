@@ -76,7 +76,7 @@ public class CommentService {
                         "Post not found with id: " + postId
                 ));
 
-        if (post.getDeletionDate() != null) {
+        if (post.getDeletedAt() != null) {
             throw new BadRequestException(
                     "Comments cannot be added to a deleted post."
             );
@@ -93,7 +93,7 @@ public class CommentService {
                 );
             }
 
-            if (parentComment.getDeletionDate() != null) {
+            if (parentComment.getDeletedAt() != null) {
                 throw new BadRequestException(
                         "Replies cannot be added to a deleted comment."
                 );
@@ -107,7 +107,7 @@ public class CommentService {
                 .owner(owner)
                 .post(post)
                 .parentComment(parentComment)
-                .creationDate(now)
+                .createdAt(now)
                 .updatedAt(null)
                 .build();
 
@@ -142,7 +142,7 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
         User currentUser = currentUserService.getCurrentUser();
 
-        if (comment.getDeletionDate() != null) {
+        if (comment.getDeletedAt() != null) {
             throw new BadRequestException("Deleted comments cannot be voted.");
         }
 
@@ -199,7 +199,7 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
         User currentUser = currentUserService.getCurrentUser();
 
-        if (comment.getDeletionDate() != null) {
+        if (comment.getDeletedAt() != null) {
             throw new BadRequestException(
                     "Comment is already deleted."
             );
@@ -214,7 +214,7 @@ public class CommentService {
         Instant now = Instant.now();
 
         comment.setText("[deleted by user]");
-        comment.setDeletionDate(now);
+        comment.setDeletedAt(now);
         comment.setUpdatedAt(now);
 
         commentRepository.save(comment);
@@ -236,7 +236,7 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
         User currentUser = currentUserService.getCurrentUser();
 
-        if (comment.getDeletionDate() != null) {
+        if (comment.getDeletedAt() != null) {
             throw new BadRequestException(
                     "Deleted comments cannot be edited."
             );

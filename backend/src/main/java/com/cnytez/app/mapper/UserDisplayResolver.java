@@ -15,7 +15,7 @@ public final class UserDisplayResolver {
     private UserDisplayResolver() {}
 
     public static String resolveAuthor(User owner) {
-        if (owner == null || owner.getDeletionDate() != null) {
+        if (owner == null || owner.getDeletedAt() != null) {
             return DELETED_USER_LABEL;
         }
         return owner.getUsername();

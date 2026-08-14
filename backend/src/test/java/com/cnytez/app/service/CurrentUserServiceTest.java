@@ -4,13 +4,11 @@ import com.cnytez.app.exception.UnauthorizedException;
 import com.cnytez.app.model.User;
 import com.cnytez.app.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -47,7 +45,7 @@ class CurrentUserServiceTest {
         context.setAuthentication(auth);
         SecurityContextHolder.setContext(context);
         
-        when(userRepository.findByUsernameAndDeletionDateIsNull(username)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameAndDeletedAtIsNull(username)).thenReturn(Optional.of(user));
 
         // act
         Optional<User> result = currentUserService.findCurrentUser();
@@ -80,7 +78,7 @@ class CurrentUserServiceTest {
         context.setAuthentication(auth);
         SecurityContextHolder.setContext(context);
         
-        when(userRepository.findByUsernameAndDeletionDateIsNull(username)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameAndDeletedAtIsNull(username)).thenReturn(Optional.of(user));
 
         // act
         User result = currentUserService.getCurrentUser();
