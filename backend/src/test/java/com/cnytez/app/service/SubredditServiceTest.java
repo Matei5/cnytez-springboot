@@ -109,13 +109,16 @@ class SubredditServiceTest {
     }
 
     @Test
-    void createSubreddit_nameTaken_throwsBadRequestException() {
+    void createSubreddit_nameTaken_throwsConflictException() {
         // arrange
         com.cnytez.app.dto.request.CreateSubredditRequest request = new com.cnytez.app.dto.request.CreateSubredditRequest("newsub", "Display Name", "description", null);
         when(subredditRepository.existsByName("newsub")).thenReturn(true);
 
         // act & assert
-        assertThrows(com.cnytez.app.exception.BadRequestException.class, () -> subredditService.createSubreddit(request));
+        assertThrows(
+                com.cnytez.app.exception.ConflictException.class,
+                () -> subredditService.createSubreddit(request)
+        );
         verify(subredditRepository, never()).save(any(Subreddit.class));
     }
 
