@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,7 +54,7 @@ class SubredditControllerTest {
     void getAllSubreddits_success() throws Exception {
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "News", "Global News",
-                100, 5L, null, LocalDateTime.now()
+                100, 5L, null, Instant.now()
         );
 
         when(subredditService.getAllSubreddits()).thenReturn(List.of(subreddit));
@@ -71,7 +70,7 @@ class SubredditControllerTest {
     void getSubredditByName_success() throws Exception {
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "News", "Global News",
-                100, 5L, null, LocalDateTime.now()
+                100, 5L, null, Instant.now()
         );
 
         when(subredditService.getSubredditByName("news")).thenReturn(subreddit);
@@ -103,7 +102,7 @@ class SubredditControllerTest {
         CreateSubredditRequest request = new CreateSubredditRequest("news", "News", "Global News", null);
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "News", "Global News",
-                1, 0L, null, LocalDateTime.now()
+                1, 0L, null, Instant.now()
         );
 
         when(subredditService.createSubreddit(any(CreateSubredditRequest.class))).thenReturn(subreddit);
@@ -121,7 +120,7 @@ class SubredditControllerTest {
         UpdateSubredditRequest request = new UpdateSubredditRequest("Updated News", "Updated Description", null);
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "Updated News", "Updated Description",
-                1, 0L, null, LocalDateTime.now()
+                1, 0L, null, Instant.now()
         );
 
         when(subredditService.updateSubreddit(eq("news"), any(UpdateSubredditRequest.class))).thenReturn(subreddit);

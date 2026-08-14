@@ -17,7 +17,6 @@ import com.cnytez.app.dto.internal.UserProfileDto;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -139,7 +138,7 @@ public class AuthService {
             );
         }
 
-        user.setDeletedAt(LocalDateTime.now());
+        user.setDeletedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 

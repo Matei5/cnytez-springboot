@@ -6,8 +6,6 @@ import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "users")
 @Getter
@@ -40,7 +38,7 @@ public class User {
 
     private Instant updatedAt;
 
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Override
     public boolean equals(Object o) {
