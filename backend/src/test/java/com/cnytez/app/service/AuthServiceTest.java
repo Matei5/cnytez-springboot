@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import com.cnytez.app.exception.ConflictException;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -72,13 +73,13 @@ class AuthServiceTest {
     }
 
     @Test
-    void register_usernameTaken_throwsBadRequestException() {
+    void register_usernameTaken_throwsConflictException() {
         // arrange
         RegisterRequest request = new RegisterRequest("testuser", "test@example.com", "password123");
         when(userRepository.existsByUsernameAndDeletionDateIsNull(request.username())).thenReturn(true);
 
         // act & assert
-        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
+        ConflictException exception = assertThrows(ConflictException.class, () -> {
             authService.register(request);
         });
         
