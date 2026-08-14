@@ -3,6 +3,7 @@ package com.cnytez.app.service;
 import com.cnytez.app.dto.request.*;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.exception.BadRequestException;
+import com.cnytez.app.exception.ConflictException;
 import com.cnytez.app.exception.UnauthorizedException;
 import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
@@ -31,10 +32,10 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
-            throw new BadRequestException("Username '" + request.username() + "' is already taken.");
+            throw new ConflictException("Username '" + request.username() + "' is already taken.");
         }
         if (userRepository.existsByEmail(request.email())) {
-            throw new BadRequestException("Email '" + request.email() + "' is already registered.");
+            throw new ConflictException("Email '" + request.email() + "' is already registered.");
         }
 
         User user = User.builder()
