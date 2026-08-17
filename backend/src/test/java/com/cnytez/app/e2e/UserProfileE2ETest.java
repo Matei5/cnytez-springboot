@@ -54,7 +54,7 @@ class UserProfileE2ETest extends AbstractE2ETest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.displayName").value("My Display Name"))
-                .andExpect(jsonPath("$.data.profilePhotoURL").value("https://example.com/avatar.png"));
+                .andExpect(jsonPath("$.data.avatarUrl").value("https://example.com/avatar.png"));
 
         // 3. verify profile via get /auth/me
         mockMvc.perform(get("/auth/me")
