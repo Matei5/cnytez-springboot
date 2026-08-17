@@ -107,11 +107,19 @@ class UserProfileE2ETest extends AbstractE2ETest {
                         .content(objectMapper.writeValueAsString(newLoginRequest)))
                 .andExpect(status().isUnauthorized());
 
-        // 9. re-register with the same username
-        RegisterRequest reRegisterRequest = new RegisterRequest(username, "new_" + email, "BrandNewPassword123!");
+        // 9. attempting to recreate an account with the same username fails with 409 conflict
+        RegisterRequest sameUsernameRequest = new RegisterRequest(username, "new_" + email, "BrandNewPassword123!");
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reRegisterRequest)))
+                        .content(objectMapper.writeValueAsString(sameUsernameRequest)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false));
+
+        // 10. recreating an account with a new username but the same email succeeds (email is reusable)
+        RegisterRequest reuseEmailRequest = new RegisterRequest("new_" + username, email, "BrandNewPassword123!");
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reuseEmailRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true));
     }
