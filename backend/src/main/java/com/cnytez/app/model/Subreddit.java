@@ -36,6 +36,8 @@ public class Subreddit {
     @Column(nullable = false)
     private Instant createdAt;
 
+    private Instant updatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     @ToString.Exclude

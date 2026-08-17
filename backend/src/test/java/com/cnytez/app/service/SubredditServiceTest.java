@@ -43,7 +43,7 @@ class SubredditServiceTest {
         // arrange
         String name = "testsub";
         Subreddit subreddit = Subreddit.builder().id(UUID.randomUUID()).name(name).build();
-        SubredditDto dto = new SubredditDto(subreddit.getId(), name, "Test Sub", null, 0, 0L, null, null);
+        SubredditDto dto = new SubredditDto(subreddit.getId(), name, "Test Sub", null, 0, 0L, null, null, null);
         
         when(subredditRepository.findByName(name)).thenReturn(Optional.of(subreddit));
         when(postRepository.countBySubreddit(subreddit)).thenReturn(0L);
@@ -71,7 +71,7 @@ class SubredditServiceTest {
     void getAllSubreddits_ReturnsList() {
         // arrange
         Subreddit subreddit = Subreddit.builder().id(UUID.randomUUID()).name("testsub").build();
-        com.cnytez.app.dto.internal.SubredditDto dto = new com.cnytez.app.dto.internal.SubredditDto(subreddit.getId(), "testsub", "Test Sub", null, 0, 0L, null, null);
+        com.cnytez.app.dto.internal.SubredditDto dto = new com.cnytez.app.dto.internal.SubredditDto(subreddit.getId(), "testsub", "Test Sub", null, 0, 0L, null, null, null);
         
         when(subredditRepository.findAll()).thenReturn(java.util.List.of(subreddit));
         when(postRepository.countBySubreddit(subreddit)).thenReturn(0L);
@@ -91,7 +91,7 @@ class SubredditServiceTest {
         // arrange
         com.cnytez.app.dto.request.CreateSubredditRequest request = new com.cnytez.app.dto.request.CreateSubredditRequest("newsub", "Display Name", "description", null);
         Subreddit saved = Subreddit.builder().id(UUID.randomUUID()).name("newsub").build();
-        com.cnytez.app.dto.internal.SubredditDto dto = new com.cnytez.app.dto.internal.SubredditDto(saved.getId(), "newsub", "description", null, 0, 0L, null, null);
+        com.cnytez.app.dto.internal.SubredditDto dto = new com.cnytez.app.dto.internal.SubredditDto(saved.getId(), "newsub", "description", null, 0, 0L, null, null, null);
         com.cnytez.app.model.User user = com.cnytez.app.model.User.builder().id(UUID.randomUUID()).username("testuser").build();
 
         when(subredditRepository.existsByName("newsub")).thenReturn(false);
@@ -128,7 +128,7 @@ class SubredditServiceTest {
         com.cnytez.app.dto.request.UpdateSubredditRequest request = new com.cnytez.app.dto.request.UpdateSubredditRequest("new description", "http://icon.png", "http://banner.png");
         com.cnytez.app.model.User user = com.cnytez.app.model.User.builder().id(UUID.randomUUID()).username("testuser").build();
         Subreddit existing = Subreddit.builder().id(UUID.randomUUID()).name("testsub").owner(user).build();
-        com.cnytez.app.dto.internal.SubredditDto dto = new com.cnytez.app.dto.internal.SubredditDto(existing.getId(), "testsub", "new description", null, 0, 0L, null, null);
+        com.cnytez.app.dto.internal.SubredditDto dto = new com.cnytez.app.dto.internal.SubredditDto(existing.getId(), "testsub", "new description", null, 0, 0L, null, null, null);
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(subredditRepository.findByName("testsub")).thenReturn(Optional.of(existing));
@@ -141,6 +141,7 @@ class SubredditServiceTest {
 
         // assert
         assertNotNull(result);
+        assertNotNull(existing.getUpdatedAt());
         verify(subredditRepository).save(any(Subreddit.class));
     }
 

@@ -12,6 +12,6 @@ Ensure you have Docker Desktop opened and running before running the tests. Some
 ./mvnw test -Dtest="*IntegrationTest"
 
 ### Run individual test:
-.\mvnw.cmd test -Dtest="PostServiceTest"
-.\mvnw.cmd test -Dtest=" -- Test class name -- "
+/mvnw test -Dtest="PostServiceTest"
+/mvnw test -Dtest=" -- Test class name -- "
 
