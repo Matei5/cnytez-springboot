@@ -4,17 +4,11 @@ import com.cnytez.app.dto.internal.PostDto;
 import com.cnytez.app.dto.internal.SubredditDto;
 import com.cnytez.app.dto.request.CreateSubredditRequest;
 import com.cnytez.app.dto.request.UpdateSubredditRequest;
-import com.cnytez.app.service.JwtService;
 import com.cnytez.app.service.PostService;
 import com.cnytez.app.service.SubredditService;
-import com.cnytez.app.logging.LogManager;
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 
 import java.time.Instant;
@@ -29,20 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SubredditController.class)
-@AutoConfigureMockMvc(addFilters = false)
-class SubredditControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
-    private LogManager logManager;
+class SubredditControllerTest extends BaseControllerTest {
 
     @MockitoBean
     private SubredditService subredditService;

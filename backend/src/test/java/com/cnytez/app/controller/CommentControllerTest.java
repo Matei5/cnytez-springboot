@@ -6,15 +6,9 @@ import com.cnytez.app.dto.request.UpdateCommentRequest;
 import com.cnytez.app.dto.request.VoteRequest;
 import com.cnytez.app.dto.response.VoteResponse;
 import com.cnytez.app.service.CommentService;
-import com.cnytez.app.service.JwtService;
-import com.cnytez.app.logging.LogManager;
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 
 import java.time.Instant;
@@ -29,20 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CommentController.class)
-@AutoConfigureMockMvc(addFilters = false)
-class CommentControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private JwtService jwtService;
-    
-    @MockitoBean
-    private LogManager logManager;
+class CommentControllerTest extends BaseControllerTest {
 
     @MockitoBean
     private CommentService commentService;
@@ -51,7 +32,7 @@ class CommentControllerTest {
     void getCommentById_success() throws Exception {
         UUID id = UUID.randomUUID();
         CommentDto mockComment = new CommentDto(
-                id, UUID.randomUUID(), null, "Test comment", "user1", 
+                id, UUID.randomUUID(), null, "Test comment", "user1",
                 10, 2, 8, null, Instant.now(), Instant.now(), List.of()
         );
 
@@ -67,7 +48,7 @@ class CommentControllerTest {
     void getCommentsByPost_success() throws Exception {
         UUID postId = UUID.randomUUID();
         CommentDto mockComment = new CommentDto(
-                UUID.randomUUID(), postId, null, "Test comment", "user1", 
+                UUID.randomUUID(), postId, null, "Test comment", "user1",
                 10, 2, 8, null, Instant.now(), Instant.now(), List.of()
         );
 
@@ -85,9 +66,9 @@ class CommentControllerTest {
     void createComment_success() throws Exception {
         UUID postId = UUID.randomUUID();
         CreateCommentRequest request = new CreateCommentRequest("New comment", null);
-        
+
         CommentDto mockComment = new CommentDto(
-                UUID.randomUUID(), postId, null, "New comment", "user1", 
+                UUID.randomUUID(), postId, null, "New comment", "user1",
                 0, 0, 0, null, Instant.now(), Instant.now(), List.of()
         );
 
@@ -105,9 +86,9 @@ class CommentControllerTest {
     void updateComment_success() throws Exception {
         UUID id = UUID.randomUUID();
         UpdateCommentRequest request = new UpdateCommentRequest("Updated comment");
-        
+
         CommentDto mockComment = new CommentDto(
-                id, UUID.randomUUID(), null, "Updated comment", "user1", 
+                id, UUID.randomUUID(), null, "Updated comment", "user1",
                 0, 0, 0, null, Instant.now(), Instant.now(), List.of()
         );
 

@@ -9,15 +9,10 @@ import com.cnytez.app.dto.internal.UserProfileDto;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.dto.response.AuthUserDto;
 import com.cnytez.app.service.AuthService;
-import com.cnytez.app.service.JwtService;
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -32,23 +27,10 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 
 @WebMvcTest(AuthController.class)
-@AutoConfigureMockMvc(addFilters = false) // disable security filters for simple controller testing
-class AuthControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+class AuthControllerTest extends BaseControllerTest {
 
     @MockitoBean
     private AuthService authService;
-
-    @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
-    private com.cnytez.app.logging.LogManager logManager;
 
     @Test
     void register_success() throws Exception {
@@ -107,7 +89,7 @@ class AuthControllerTest {
         }
         """;
         UserProfileDto profile = new UserProfileDto("testuser", "test@example.com", "Updated User", "http://example.com/newphoto.jpg");
-        
+
         when(authService.updateProfile(any(UpdateProfileRequest.class))).thenReturn(profile);
 
         mockMvc.perform(put("/auth/me")
@@ -129,7 +111,7 @@ class AuthControllerTest {
     @Test
     void changePassword_success() throws Exception {
         ChangePasswordRequest request = new ChangePasswordRequest("oldpass", "newpassword123");
-        
+
         doNothing().when(authService).changePassword(any(ChangePasswordRequest.class));
 
         mockMvc.perform(put("/auth/me/password")
@@ -143,7 +125,7 @@ class AuthControllerTest {
     @Test
     void deleteUser_success() throws Exception {
         DeleteUserRequest request = new DeleteUserRequest("password123");
-        
+
         doNothing().when(authService).deleteUser(any(DeleteUserRequest.class));
 
         mockMvc.perform(delete("/auth/me")

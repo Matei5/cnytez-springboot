@@ -5,16 +5,10 @@ import com.cnytez.app.dto.request.CreatePostRequest;
 import com.cnytez.app.dto.request.UpdatePostRequest;
 import com.cnytez.app.dto.request.VoteRequest;
 import com.cnytez.app.dto.response.VoteResponse;
-import com.cnytez.app.service.JwtService;
 import com.cnytez.app.service.PostService;
-import com.cnytez.app.logging.LogManager;
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 
 import java.time.Instant;
@@ -29,20 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PostController.class)
-@AutoConfigureMockMvc(addFilters = false)
-class PostControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
-    private LogManager logManager;
+class PostControllerTest extends BaseControllerTest {
 
     @MockitoBean
     private PostService postService;
