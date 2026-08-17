@@ -138,6 +138,8 @@ public class AuthService {
             );
         }
 
+        user.setEmail("deleted__" + user.getId() + "__" + user.getEmail());
+
         user.setDeletedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
