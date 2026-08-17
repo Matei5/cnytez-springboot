@@ -106,5 +106,13 @@ class UserProfileE2ETest extends AbstractE2ETest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newLoginRequest)))
                 .andExpect(status().isUnauthorized());
+
+        // 9. re-register with the same username
+        RegisterRequest reRegisterRequest = new RegisterRequest(username, "new_" + email, "BrandNewPassword123!");
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reRegisterRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
     }
 }
