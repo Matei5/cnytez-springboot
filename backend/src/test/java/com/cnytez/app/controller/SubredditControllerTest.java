@@ -35,7 +35,7 @@ class SubredditControllerTest extends BaseControllerTest {
     void getAllSubreddits_success() throws Exception {
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "News", "Global News",
-                100, 5L, null, Instant.now()
+                100, 5L, null, Instant.now(), null
         );
 
         when(subredditService.getAllSubreddits()).thenReturn(List.of(subreddit));
@@ -51,7 +51,7 @@ class SubredditControllerTest extends BaseControllerTest {
     void getSubredditByName_success() throws Exception {
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "News", "Global News",
-                100, 5L, null, Instant.now()
+                100, 5L, null, Instant.now(), null
         );
 
         when(subredditService.getSubredditByName("news")).thenReturn(subreddit);
@@ -83,7 +83,7 @@ class SubredditControllerTest extends BaseControllerTest {
         CreateSubredditRequest request = new CreateSubredditRequest("news", "News", "Global News", null);
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "News", "Global News",
-                1, 0L, null, Instant.now()
+                1, 0L, null, Instant.now(), null
         );
 
         when(subredditService.createSubreddit(any(CreateSubredditRequest.class))).thenReturn(subreddit);
@@ -101,7 +101,7 @@ class SubredditControllerTest extends BaseControllerTest {
         UpdateSubredditRequest request = new UpdateSubredditRequest("Updated News", "Updated Description", null);
         SubredditDto subreddit = new SubredditDto(
                 UUID.randomUUID(), "news", "Updated News", "Updated Description",
-                1, 0L, null, Instant.now()
+                1, 0L, null, Instant.now(), Instant.now()
         );
 
         when(subredditService.updateSubreddit(eq("news"), any(UpdateSubredditRequest.class))).thenReturn(subreddit);

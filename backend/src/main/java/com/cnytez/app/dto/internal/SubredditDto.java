@@ -11,6 +11,7 @@ public record SubredditDto(
         int memberCount,
         long postCount,
         String iconUrl,
-        Instant createdAt
+        Instant createdAt,
+        Instant updatedAt
 ) {
 }

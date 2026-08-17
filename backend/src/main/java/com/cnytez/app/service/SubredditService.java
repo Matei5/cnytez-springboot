@@ -66,6 +66,7 @@ public class SubredditService {
                 .iconUrl(request.iconUrl())
                 .owner(owner)
                 .createdAt(Instant.now())
+                .updatedAt(null)
                 .build();
 
         subreddit.addMember(owner);
@@ -109,6 +110,8 @@ public class SubredditService {
         if (request.iconUrl() != null) {
             subreddit.setIconUrl(request.iconUrl());
         }
+
+        subreddit.setUpdatedAt(Instant.now());
 
         Subreddit savedSubreddit =
                 subredditRepository.save(subreddit);

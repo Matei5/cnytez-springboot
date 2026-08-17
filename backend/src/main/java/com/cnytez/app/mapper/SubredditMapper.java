@@ -11,5 +11,6 @@ public interface SubredditMapper {
     @Mapping(target = "memberCount", expression = "java(subreddit.getMembers().size())")
     @Mapping(target = "postCount", source = "postCount")
     @Mapping(target = "createdAt", source = "subreddit.createdAt")
+    @Mapping(target = "updatedAt", source = "subreddit.updatedAt")
     SubredditDto toDto(Subreddit subreddit, long postCount);
 }
