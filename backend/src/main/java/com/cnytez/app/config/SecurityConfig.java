@@ -44,6 +44,11 @@ public class SecurityConfig {
                                 "/subreddits/**",
                                 "/filters"
                         ).permitAll()
+
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/prometheus"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

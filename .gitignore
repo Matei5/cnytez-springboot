@@ -27,3 +27,4 @@ target/
 
 ### Secrets ###
 .env
+backend/src/main/resources/application-local.yml

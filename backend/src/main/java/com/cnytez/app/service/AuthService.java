@@ -9,6 +9,7 @@ import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.AuthMapper;
 import com.cnytez.app.model.User;
+import com.cnytez.app.monitoring.RedditMetrics;
 import com.cnytez.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final CurrentUserService currentUserService;
     private final AuthMapper authMapper;
+    private final RedditMetrics redditMetrics;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
@@ -50,7 +52,9 @@ public class AuthService {
         User saved = userRepository.save(user);
         logManager.log("Register success! User with id " + user.getId() + " registered", LogLevel.INFO);
         String token = jwtService.generateToken(saved.getUsername());
-        return authMapper.toAuthResponse(saved, token);
+        AuthResponse response = authMapper.toAuthResponse(saved, token);
+        redditMetrics.recordRegistration();
+        return response;
     }
 
     public AuthResponse  login(LoginRequest request) {

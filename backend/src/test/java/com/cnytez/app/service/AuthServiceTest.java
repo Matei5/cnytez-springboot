@@ -10,6 +10,7 @@ import com.cnytez.app.exception.UnauthorizedException;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.AuthMapper;
 import com.cnytez.app.model.User;
+import com.cnytez.app.monitoring.RedditMetrics;
 import com.cnytez.app.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +43,8 @@ class AuthServiceTest {
     private CurrentUserService currentUserService;
     @Mock
     private AuthMapper authMapper;
+    @Mock
+    private RedditMetrics redditMetrics;
 
     @InjectMocks
     private AuthService authService;
@@ -70,6 +73,7 @@ class AuthServiceTest {
         
         verify(userRepository).save(any(User.class));
         verify(logManager).log(anyString(), any());
+        verify(redditMetrics).recordRegistration();
     }
 
     @Test
