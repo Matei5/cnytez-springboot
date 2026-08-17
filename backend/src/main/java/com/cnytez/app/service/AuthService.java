@@ -30,7 +30,7 @@ public class AuthService {
     private final AuthMapper authMapper;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
+        if (userRepository.existsByUsername(request.username())) {
             throw new ConflictException("Username '" + request.username() + "' is already taken.");
         }
         if (userRepository.existsByEmail(request.email())) {
