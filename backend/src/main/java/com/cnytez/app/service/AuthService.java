@@ -30,7 +30,7 @@ public class AuthService {
     private final AuthMapper authMapper;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
+        if (userRepository.existsByUsername(request.username())) {
             throw new ConflictException("Username '" + request.username() + "' is already taken.");
         }
         if (userRepository.existsByEmail(request.email())) {
@@ -137,6 +137,8 @@ public class AuthService {
                     "Current password is incorrect."
             );
         }
+
+        user.setEmail("deleted__" + user.getId() + "__" + user.getEmail());
 
         user.setDeletedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
