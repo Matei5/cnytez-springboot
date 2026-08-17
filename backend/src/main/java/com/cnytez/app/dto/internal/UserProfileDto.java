@@ -4,6 +4,6 @@ public record UserProfileDto(
         String username,
         String email,
         String displayName,
-        String profilePhotoURL
+        String avatarUrl
 ) {
 }

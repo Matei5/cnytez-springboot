@@ -31,7 +31,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String profilePhotoURL;
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
 
     @Column(nullable = false)
     private Instant createdAt;
