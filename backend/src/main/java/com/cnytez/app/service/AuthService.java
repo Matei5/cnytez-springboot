@@ -42,7 +42,7 @@ public class AuthService {
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .profilePhotoURL(null)
+                .profilePhotoUrl(null)
                 .createdAt(Instant.now())
                 .updatedAt(null)
                 .build();
@@ -79,8 +79,8 @@ public class AuthService {
             user.setName(request.displayName());
         }
 
-        if (request.profilePhotoURL() != null) {
-            user.setProfilePhotoURL(request.profilePhotoURL());
+        if (request.avatarUrl() != null) {
+            user.setProfilePhotoUrl(request.avatarUrl());
         }
 
         user.setUpdatedAt(Instant.now());

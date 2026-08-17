@@ -17,6 +17,6 @@ public interface AuthMapper {
     AuthResponse toAuthResponse(User user, String token);
 
     @Mapping(target = "displayName", source = "user.name")
-    @Mapping(target = "profilePhotoURL", source = "user.profilePhotoURL")
+    @Mapping(target = "avatarUrl", source = "user.profilePhotoUrl")
     UserProfileDto toProfileDto(User user);
 }
