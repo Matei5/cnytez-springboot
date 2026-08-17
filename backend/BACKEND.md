@@ -82,7 +82,7 @@ backend/
 ├── Dockerfile                   # Multi-stage build (Corretto 25 -> Alpine JRE)
 ├── docker-compose.yml           # Backend API + PostgreSQL 15 local stack
 ├── pom.xml                      # Maven dependencies & build plugins
-└── README.md                    # Backend documentation (this file)
+└── BACKEND.md                   # Backend documentation (this file)
 ```
 
 ---

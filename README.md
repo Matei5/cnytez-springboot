@@ -8,7 +8,7 @@
 [![Flyway](https://img.shields.io/badge/Flyway-Database%20Migrations-red.svg?logo=flyway)](https://flywaydb.org/)
 [![.NET](https://img.shields.io/badge/.NET-8.0-purple.svg?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker)](https://www.docker.com/)
-[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg?logo=githubactions)](.github/README.md)
+[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg?logo=githubactions)](.github/CI_CD.md)
 [![AWS EC2](https://img.shields.io/badge/Deploy-AWS%20EC2-FF9900.svg?logo=amazonec2)](https://aws.amazon.com/ec2/)
 
 <p align="center">
@@ -74,16 +74,18 @@ The application is architected as microservices running across AWS EC2 instances
 
 ```
 .
-├── .github/                     # CI/CD workflows and deployment documentation
+├── .github/                     # CI/CD workflows and repository configuration
 │   ├── workflows/               # GitHub Actions CI & CD pipeline definitions
-│   └── README.md                # CI/CD documentation
+│   │   ├── ci.yml               # Continuous Integration: Maven build & test execution
+│   │   └── deploy-backend.yml   # Continuous Deployment: Automated AWS EC2 deployment via SSH
+│   └── CI_CD.md                 # CI/CD documentation
 │
 ├── backend/                     # Spring Boot 4 REST API service
 │   ├── src/                     # Java source code, configs, and migration scripts
 │   ├── Dockerfile               # Multi-stage container build definition
 │   ├── docker-compose.yml       # Local backend & PostgreSQL stack orchestration
 │   ├── pom.xml                  # Maven dependencies & build plugins
-│   └── README.md                # Backend architecture & setup documentation
+│   └── BACKEND.md               # Backend architecture & setup documentation
 │
 ├── image-server/                # .NET 8 Image Processing Microservice
 │   ├── ImageProcessingServer/   # ASP.NET Core source code & filter logic
@@ -254,3 +256,5 @@ Automated pipelines are implemented using **GitHub Actions**:
    - Triggers automatically when backend code is merged to `main`, or via manual `workflow_dispatch`.
    - Utilizes SSH with host key verification (`known_hosts`) to connect to the AWS EC2 instance.
    - Executes remote deployment scripts to pull the latest code and rebuild and restart containers with Docker Compose.
+
+For detailed workflow breakdowns, secret configurations, and troubleshooting, see the [CI/CD Documentation](.github/CI_CD.md).

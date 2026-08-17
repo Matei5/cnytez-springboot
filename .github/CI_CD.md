@@ -29,7 +29,7 @@
 ├── workflows/
 │   ├── ci.yml                 # Continuous Integration: Maven build & test execution
 │   └── deploy-backend.yml     # Continuous Deployment: Automated AWS EC2 deployment via SSH
-└── README.md                  # CI/CD pipelines documentation (this file)
+└── CI_CD.md                   # CI/CD pipelines documentation (this file)
 ```
 
 | Workflow | File | Trigger(s) | Runner | Purpose |
