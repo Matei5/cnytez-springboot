@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import com.cnytez.app.dto.internal.UserProfileDto;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +43,8 @@ public class AuthService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .profilePhotoURL(null)
+                .createdAt(Instant.now())
+                .updatedAt(null)
                 .build();
 
         User saved = userRepository.save(user);
@@ -81,6 +83,8 @@ public class AuthService {
             user.setProfilePhotoURL(request.profilePhotoURL());
         }
 
+        user.setUpdatedAt(Instant.now());
+
         User savedUser = userRepository.save(user);
 
         logManager.log(
@@ -110,6 +114,8 @@ public class AuthService {
                 passwordEncoder.encode(request.newPassword())
         );
 
+        user.setUpdatedAt(Instant.now());
+
         userRepository.save(user);
 
         logManager.log(
@@ -132,7 +138,8 @@ public class AuthService {
             );
         }
 
-        user.setDeletedAt(LocalDateTime.now());
+        user.setDeletedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 
         logManager.log(

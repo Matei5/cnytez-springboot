@@ -2,9 +2,9 @@ package com.cnytez.app.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.UUID;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -33,7 +33,12 @@ public class User {
 
     private String profilePhotoURL;
 
-    private LocalDateTime deletedAt;
+    @Column(nullable = false)
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    private Instant deletedAt;
 
     @Override
     public boolean equals(Object o) {
