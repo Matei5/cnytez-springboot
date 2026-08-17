@@ -23,6 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerTest extends BaseControllerTest {
@@ -72,22 +74,38 @@ class AuthControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/auth/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.username").value("testuser"));
+                .andExpect(jsonPath("$.data.username").value("testuser"))
+                .andExpect(jsonPath("$.data.avatarUrl")
+                .value("http://example.com/photo.jpg"))
+                .andExpect(jsonPath("$.data.profilePhotoURL").doesNotExist());
     }
 
     @Test
     void updateProfile_success() throws Exception {
-        UpdateProfileRequest request = new UpdateProfileRequest("Updated User", "http://example.com/newphoto.jpg");
+        String requestJson = """
+        {
+          "displayName": "Updated User",
+          "avatarUrl": "http://example.com/newphoto.jpg"
+        }
+        """;
         UserProfileDto profile = new UserProfileDto("testuser", "test@example.com", "Updated User", "http://example.com/newphoto.jpg");
 
         when(authService.updateProfile(any(UpdateProfileRequest.class))).thenReturn(profile);
 
         mockMvc.perform(put("/auth/me")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.displayName").value("Updated User"));
+                .andExpect(jsonPath("$.data.displayName").value("Updated User"))
+                .andExpect(jsonPath("$.data.avatarUrl")
+                        .value("http://example.com/newphoto.jpg"))
+                .andExpect(jsonPath("$.data.profilePhotoURL").doesNotExist());
+
+        verify(authService).updateProfile(argThat(request ->
+                "Updated User".equals(request.displayName())
+                        && "http://example.com/newphoto.jpg".equals(request.avatarUrl())
+        ));
     }
 
     @Test

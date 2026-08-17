@@ -153,6 +153,10 @@ class AuthServiceTest {
         // assert
         assertNotNull(result);
         assertEquals("New Display Name", result.displayName());
+        assertEquals(
+                "http://example.com/photo.jpg",
+                user.getProfilePhotoUrl()
+        );
         verify(userRepository).save(any(User.class));
     }
 
