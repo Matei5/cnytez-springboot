@@ -12,6 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +24,49 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private final LogManager logManager;
+
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoResourceFound(
+            NoResourceFoundException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.NOT_FOUND,
+                "NOT_FOUND",
+                "The requested endpoint does not exist.",
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnreadableMessage(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.BAD_REQUEST,
+                "BAD_REQUEST",
+                "The request body is missing or contains invalid JSON.",
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.BAD_REQUEST,
+                "BAD_REQUEST",
+                "A request parameter has an invalid format.",
+                List.of(),
+                request
+        );
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(
@@ -44,6 +90,20 @@ public class GlobalExceptionHandler {
         return errorResponse(
                 HttpStatus.BAD_REQUEST,
                 "BAD_REQUEST",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflict(
+            ConflictException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.CONFLICT,
+                "CONFLICT",
                 exception.getMessage(),
                 List.of(),
                 request
@@ -102,8 +162,22 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UnprocessableEntityException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnprocessableEntity(
+            UnprocessableEntityException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                "UNPROCESSABLE_ENTITY",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
     @ExceptionHandler(InternalServerErrorException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidation(
+    public ResponseEntity<ApiErrorResponse> handleInternalServerError(
             InternalServerErrorException exception,
             HttpServletRequest request
     ) {

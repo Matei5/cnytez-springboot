@@ -18,7 +18,7 @@ public interface CommentMapper {
     @Mapping(target = "content", source = "comment.text")
     @Mapping(target = "author", expression = "java(com.cnytez.app.mapper.UserDisplayResolver.resolveAuthor(comment.getOwner()))")
     @Mapping(target = "score", expression = "java((int)(upvotes - downvotes))")
-    @Mapping(target = "createdAt", source = "comment.creationDate")
+    @Mapping(target = "createdAt", source = "comment.createdAt")
     CommentDto toDto(Comment comment,
                             long upvotes,
                             long downvotes,

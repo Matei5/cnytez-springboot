@@ -1,0 +1,12 @@
+ALTER TABLE users
+    ADD COLUMN created_at TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE users
+    ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE;
+
+UPDATE users
+SET created_at = CURRENT_TIMESTAMP
+WHERE created_at IS NULL;
+
+ALTER TABLE users
+    ALTER COLUMN created_at SET NOT NULL;

@@ -34,11 +34,11 @@ public class Post {
     private Filter filter;
 
     @Column(nullable = false)
-    private Instant creationDate;
+    private Instant createdAt;
 
     private Instant updatedAt;
 
-    private Instant deletionDate;
+    private Instant deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)

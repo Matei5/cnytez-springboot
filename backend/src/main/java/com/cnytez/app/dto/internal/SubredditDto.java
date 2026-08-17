@@ -1,6 +1,6 @@
 package com.cnytez.app.dto.internal;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record SubredditDto(
@@ -11,6 +11,6 @@ public record SubredditDto(
         int memberCount,
         long postCount,
         String iconUrl,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
 }

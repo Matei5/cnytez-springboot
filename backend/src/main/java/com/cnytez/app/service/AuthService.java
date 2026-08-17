@@ -3,6 +3,7 @@ package com.cnytez.app.service;
 import com.cnytez.app.dto.request.*;
 import com.cnytez.app.dto.response.AuthResponse;
 import com.cnytez.app.exception.BadRequestException;
+import com.cnytez.app.exception.ConflictException;
 import com.cnytez.app.exception.UnauthorizedException;
 import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 import com.cnytez.app.dto.internal.UserProfileDto;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -29,11 +30,11 @@ public class AuthService {
     private final AuthMapper authMapper;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsernameAndDeletionDateIsNull(request.username())) {
-            throw new BadRequestException("Username '" + request.username() + "' is already taken.");
+        if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
+            throw new ConflictException("Username '" + request.username() + "' is already taken.");
         }
         if (userRepository.existsByEmail(request.email())) {
-            throw new BadRequestException("Email '" + request.email() + "' is already registered.");
+            throw new ConflictException("Email '" + request.email() + "' is already registered.");
         }
 
         User user = User.builder()
@@ -42,6 +43,8 @@ public class AuthService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .profilePhotoURL(null)
+                .createdAt(Instant.now())
+                .updatedAt(null)
                 .build();
 
         User saved = userRepository.save(user);
@@ -51,7 +54,7 @@ public class AuthService {
     }
 
     public AuthResponse  login(LoginRequest request) {
-        User user = userRepository.findByUsernameAndDeletionDateIsNull(request.username())
+        User user = userRepository.findByUsernameAndDeletedAtIsNull(request.username())
                 .orElseThrow(() -> new UnauthorizedException("Invalid username or password."));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
@@ -79,6 +82,8 @@ public class AuthService {
         if (request.profilePhotoURL() != null) {
             user.setProfilePhotoURL(request.profilePhotoURL());
         }
+
+        user.setUpdatedAt(Instant.now());
 
         User savedUser = userRepository.save(user);
 
@@ -109,6 +114,8 @@ public class AuthService {
                 passwordEncoder.encode(request.newPassword())
         );
 
+        user.setUpdatedAt(Instant.now());
+
         userRepository.save(user);
 
         logManager.log(
@@ -131,7 +138,8 @@ public class AuthService {
             );
         }
 
-        user.setDeletionDate(LocalDateTime.now());
+        user.setDeletedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 
         logManager.log(

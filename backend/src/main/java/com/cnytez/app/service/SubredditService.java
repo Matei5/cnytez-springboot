@@ -1,10 +1,12 @@
 package com.cnytez.app.service;
 
-import com.cnytez.app.dto.request.CreateSubredditRequest;
 import com.cnytez.app.dto.internal.SubredditDto;
+import com.cnytez.app.dto.request.CreateSubredditRequest;
 import com.cnytez.app.dto.request.UpdateSubredditRequest;
-import com.cnytez.app.exception.BadRequestException;
+import com.cnytez.app.exception.ConflictException;
+import com.cnytez.app.exception.ForbiddenException;
 import com.cnytez.app.exception.ResourceNotFoundException;
+import com.cnytez.app.exception.UnprocessableEntityException;
 import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.SubredditMapper;
@@ -16,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -50,7 +52,7 @@ public class SubredditService {
             CreateSubredditRequest request
     ) {
         if (subredditRepository.existsByName(request.name())) {
-            throw new BadRequestException(
+            throw new ConflictException(
                     "Subreddit " + request.name() + " already exists."
             );
         }
@@ -63,7 +65,7 @@ public class SubredditService {
                 .description(request.description())
                 .iconUrl(request.iconUrl())
                 .owner(owner)
-                .creationDate(LocalDateTime.now())
+                .createdAt(Instant.now())
                 .build();
 
         subreddit.addMember(owner);
@@ -91,7 +93,7 @@ public class SubredditService {
         User currentUser = currentUserService.getCurrentUser();
 
         if (!subreddit.getOwner().getId().equals(currentUser.getId())) {
-            throw new BadRequestException(
+            throw new ForbiddenException(
                     "Only the subreddit owner can update it."
             );
         }
@@ -120,7 +122,7 @@ public class SubredditService {
         User currentUser = currentUserService.getCurrentUser();
 
         if (!subreddit.getOwner().getId().equals(currentUser.getId())) {
-            throw new BadRequestException(
+            throw new ForbiddenException(
                     "Only the subreddit owner can delete it."
             );
         }
@@ -129,7 +131,7 @@ public class SubredditService {
                 postRepository.countBySubreddit(subreddit);
 
         if (postCount > 0) {
-            throw new BadRequestException(
+            throw new UnprocessableEntityException(
                     "A subreddit with posts cannot be deleted."
             );
         }
