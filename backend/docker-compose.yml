@@ -17,8 +17,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       JWT_SECRET: ${JWT_SECRET}
-      # Spring config name
-      SPRING_CONFIG_NAME: reddit
     # wait for db to be ready before starting, not just running
     depends_on:
       db:

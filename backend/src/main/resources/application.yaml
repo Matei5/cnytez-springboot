@@ -1,6 +1,6 @@
 spring:
   application:
-    name: reddit
+    name: app
 
   datasource:
     # env vars set by docker-compose; fallback values used for local development
