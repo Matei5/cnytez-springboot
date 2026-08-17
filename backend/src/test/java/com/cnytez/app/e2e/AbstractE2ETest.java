@@ -1,4 +1,4 @@
-package com.cnytez.app;
+package com.cnytez.app.e2e;
 
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

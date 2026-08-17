@@ -1,6 +1,5 @@
 package com.cnytez.app.e2e;
 
-import com.cnytez.app.AbstractE2ETest;
 import com.cnytez.app.dto.request.LoginRequest;
 import com.cnytez.app.dto.request.RegisterRequest;
 import org.junit.jupiter.api.Test;

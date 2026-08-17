@@ -1,6 +1,5 @@
 package com.cnytez.app.e2e;
 
-import com.cnytez.app.AbstractE2ETest;
 import com.cnytez.app.dto.request.CreateSubredditRequest;
 import com.cnytez.app.dto.request.UpdatePostRequest;
 import org.junit.jupiter.api.Test;
