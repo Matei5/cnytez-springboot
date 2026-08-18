@@ -22,5 +22,9 @@ spring:
     baseline-on-migrate: true # the EC2 DB is already made, the baseline is set
     baseline-version: 1 # our baseline is at version 1, apply migrations from 2 onward
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+
 image-server:
   url: "http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123"
