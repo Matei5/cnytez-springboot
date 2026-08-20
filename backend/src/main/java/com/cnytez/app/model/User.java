@@ -31,6 +31,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion;
+
     @Column(name = "profile_photo_url")
     private String profilePhotoUrl;
 

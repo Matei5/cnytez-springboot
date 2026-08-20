@@ -57,7 +57,10 @@ class AuthServiceTest {
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        when(jwtService.generateToken(savedUser.getUsername())).thenReturn("fake-token");
+        when(jwtService.generateToken(
+                savedUser.getUsername(),
+                savedUser.getTokenVersion()
+        )).thenReturn("fake-token");
         when(authMapper.toAuthResponse(savedUser, "fake-token")).thenReturn(mockResponse);
 
         // act
@@ -96,7 +99,10 @@ class AuthServiceTest {
 
         when(userRepository.findByUsernameAndDeletedAtIsNull(request.username())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(true);
-        when(jwtService.generateToken(user.getUsername())).thenReturn("fake-token");
+        when(jwtService.generateToken(
+                user.getUsername(),
+                user.getTokenVersion()
+        )).thenReturn("fake-token");
         when(authMapper.toAuthResponse(user, "fake-token")).thenReturn(mockResponse);
 
         // act
@@ -164,8 +170,12 @@ class AuthServiceTest {
     void changePassword_success() {
         // arrange
         com.cnytez.app.dto.request.ChangePasswordRequest request = new com.cnytez.app.dto.request.ChangePasswordRequest("oldpass", "newpass");
-        User user = User.builder().id(UUID.randomUUID()).username("testuser").password("encoded-oldpass").build();
-
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .username("testuser")
+                .password("encoded-oldpass")
+                .tokenVersion(3)
+                .build();
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(passwordEncoder.matches("oldpass", "encoded-oldpass")).thenReturn(true);
         when(passwordEncoder.encode("newpass")).thenReturn("encoded-newpass");
@@ -175,6 +185,8 @@ class AuthServiceTest {
         authService.changePassword(request);
 
         // assert
+        assertEquals("encoded-newpass", user.getPassword());
+        assertEquals(4, user.getTokenVersion());
         verify(passwordEncoder).encode("newpass");
         verify(userRepository).save(any(User.class));
     }
