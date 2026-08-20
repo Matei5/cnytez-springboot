@@ -17,11 +17,12 @@ public class JwtService {
 
     private final JwtEncoder jwtEncoder;
 
-    public String generateToken(String username) {
+    public String generateToken(String username, int tokenVersion) {
         Instant now = Instant.now();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(username)
+                .claim("tokenVersion", tokenVersion)
                 .issuedAt(now)
                 .expiresAt(now.plus(1, ChronoUnit.HOURS))
                 .build();

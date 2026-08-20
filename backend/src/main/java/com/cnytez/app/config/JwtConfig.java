@@ -11,6 +11,11 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import com.cnytez.app.security.JwtTokenVersionValidator;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 
 @Configuration
 public class JwtConfig {
@@ -34,9 +39,22 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(SecretKey secretKey) {
-        return NimbusJwtDecoder
+    public JwtDecoder jwtDecoder(
+            SecretKey secretKey,
+            JwtTokenVersionValidator tokenVersionValidator
+    ) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder
                 .withSecretKey(secretKey)
                 .build();
+
+        OAuth2TokenValidator<Jwt> validator =
+                new DelegatingOAuth2TokenValidator<>(
+                        JwtValidators.createDefault(),
+                        tokenVersionValidator
+                );
+
+        decoder.setJwtValidator(validator);
+
+        return decoder;
     }
 }

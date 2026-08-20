@@ -33,7 +33,7 @@ class JwtServiceTest {
         when(jwtEncoder.encode(any(JwtEncoderParameters.class))).thenReturn(jwt);
 
         // act
-        String token = jwtService.generateToken(username);
+        String token = jwtService.generateToken(username, 0);
 
         // assert
         assertEquals("mock-token", token);

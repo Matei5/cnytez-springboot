@@ -49,7 +49,10 @@ public class AuthService {
 
         User saved = userRepository.save(user);
         logManager.log("Register success! User with id " + user.getId() + " registered", LogLevel.INFO);
-        String token = jwtService.generateToken(saved.getUsername());
+        String token = jwtService.generateToken(
+                saved.getUsername(),
+                saved.getTokenVersion()
+        );
         return authMapper.toAuthResponse(saved, token);
     }
 
@@ -62,7 +65,10 @@ public class AuthService {
         }
 
         logManager.log("Login success! User with id " + user.getId() + " logged in", LogLevel.INFO);
-        String token = jwtService.generateToken(user.getUsername());
+        String token = jwtService.generateToken(
+                user.getUsername(),
+                user.getTokenVersion()
+        );
         return authMapper.toAuthResponse(user, token);
     }
 
@@ -112,6 +118,10 @@ public class AuthService {
 
         user.setPassword(
                 passwordEncoder.encode(request.newPassword())
+        );
+
+        user.setTokenVersion(
+                user.getTokenVersion() + 1
         );
 
         user.setUpdatedAt(Instant.now());
