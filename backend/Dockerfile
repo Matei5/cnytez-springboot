@@ -1,19 +1,13 @@
-# stage one: build maven project into JAR file using Amazon Corretto
 FROM maven:3.9-amazoncorretto-25 AS build
 WORKDIR /app
-# caching maven dependencies first
 COPY pom.xml .
 COPY src ./src
-# run maven to compile to make the JAR file, skip tests
 RUN mvn clean package -DskipTests
 
-# stage two: run the JAR in an Alpine Amazon Corretto image
-# mainly JRE, without unnecessary JDK tools, optimized for AWS EC2.
 FROM amazoncorretto:25-alpine
 WORKDIR /app
-# copy built JAR file from stage one
+# used by the container health check
+RUN apk add --no-cache wget
 COPY --from=build /app/target/*.jar app.jar
-# expose default springboot port 8080
 EXPOSE 8080
-# run Spring Boot app
 ENTRYPOINT ["java", "-jar", "app.jar"]

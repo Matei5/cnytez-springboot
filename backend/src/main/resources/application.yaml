@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate # Flyway changes the DB, Hibernate only does checks
+      ddl-auto: validate # flyway changes the database; hibernate only validates it
     show-sql: true
 
   sql:
@@ -19,7 +19,7 @@ spring:
       mode: "never" # don't run the data.sql anymore
 
   flyway:
-    baseline-on-migrate: true # the EC2 DB is already made, the baseline is set
+    baseline-on-migrate: true # the ec2 database already exists, so flyway uses a baseline
     baseline-version: 1 # our baseline is at version 1, apply migrations from 2 onward
 
   servlet:
@@ -28,3 +28,19 @@ spring:
 
 image-server:
   url: "http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: "never"
+      group:
+        liveness:
+          include: "livenessState"
+        readiness:
+          include: "readinessState,db"
