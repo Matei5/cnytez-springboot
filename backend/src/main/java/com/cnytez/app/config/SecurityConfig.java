@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/",
+                                "/actuator/health/**",
                                 "/posts/**",
                                 "/comments/**",
                                 "/subreddits/**",

@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: reddit-backend
-    # restart automatically after EC2 reboots or crashes
+    # restart automatically after ec2 reboots or crashes
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -21,7 +21,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # prevent Docker logs from filling up EC2 disk
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    # prevent docker logs from filling the ec2 disk
     logging:
       driver: json-file
       options:
@@ -39,7 +45,7 @@ services:
     volumes:
       # data is saved on volume so that database information isn't lost after stop
       - postgres_data:/var/lib/postgresql/data
-    # checks that Postgres is accepting connections before marking service as healthy
+    # check that postgres accepts connections before marking the service healthy
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d cnytez_db"]
       interval: 10s
