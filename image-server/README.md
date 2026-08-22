@@ -4,9 +4,11 @@
 This is the image processing server used in the Reddit project.
 It is responsible for uploading images and applying filters.
 ### Solution structure
-ImageProcessingServer: the project directory, contains the files needed for the server's operation.
-ImageProcessingServer.AppHost: contains tools for local development, not used.
-ImageProcessingServer.ServiceDefailts: contains utilities for telemetry. Note: OpenTelemetry is disabled in docker-compose.yml
+- **ImageProcessingServer**: The core ASP.NET Core web microservice (controllers, filter pipeline, S3 storage, and health checks).
+- **ImageProcessingServer.Tests**: Comprehensive xUnit test suite (unit tests, image math verification, S3 mocking, and HTTP integration tests).
+- **ImageProcessingServer.ContractHost**: Lightweight in-memory runner for running local cross-service round-trip tests without AWS credentials.
+- **ImageProcessingServer.ServiceDefaults**: Utilities for OpenTelemetry and service defaults.
+- **ImageProcessingServer.AppHost**: Tools for Aspire local development (not used in Docker/EC2 production).
 ### How to deploy and run
 In order to be functional, this code must run on an AWS EC2 instance with the
 AmazonS3FullAccess IAM role. AWS S3 credentials used in code must correspond with the bucket

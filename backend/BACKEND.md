@@ -3,7 +3,7 @@
 # 🚀 Team Cnytez Reddit Backend (API)
 
 <p align="center">
-  A Spring Boot REST API for the <strong>Team Cnytez Reddit Backend</strong> platform, developed as part of the Cognyte Zero to Hero program. This service powers user authentication, subreddits, posts, comments, voting, and filters, while integrating with PostgreSQL, Flyway migrations, and an external image processing microservice.
+  Spring Boot REST API for the Reddit clone backend (Cognyte ZtH), implementing the <a href="https://zth-cog-fe.netlify.app/api-docs">Frontend Client API Specification</a>.
 </p>
 
 </div>
@@ -89,16 +89,10 @@ backend/
 
 ## 🗄 Database & Migrations
 
-Database schema management is handled automatically via **Flyway**:
+Database schema evolution is managed via **Flyway**:
 - **Baseline Configuration**: `spring.flyway.baseline-on-migrate: true` (baseline version `1`).
-- **Migration Scripts**: Located in `src/main/resources/db/migration/`
-  - `V2__insert_initial_filters.sql`: Seeds default image filters (e.g., Grayscale, Sepia, Inverted, Blur, Pixelated).
-  - `V3__rename_columns.sql`: Normalizes legacy column naming conventions.
-  - `V4__add_user_timestamps.sql`: Adds user creation and update audit timestamps.
-  - `V5__add_subreddit_updated_at.sql`: Adds subreddit update audit timestamp.
-  - `V6__drop_legacy_columns.sql`: Cleans up legacy database columns.
-
-Hibernate DDL auto is set to `validate` (`spring.jpa.hibernate.ddl-auto: validate`), guaranteeing that Flyway is the single source of truth for database schema alterations.
+- **Migration Scripts**: Located in `src/main/resources/db/migration/` (versioned `V2+` SQL scripts applied sequentially on top of the baseline schema).
+- **Hibernate DDL Auto**: Set to `validate` (`spring.jpa.hibernate.ddl-auto: validate`), ensuring Flyway is the single source of truth for schema changes.
 
 ---
 
