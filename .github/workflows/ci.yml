@@ -11,9 +11,70 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  deployment-changes:
+    name: Detect deployment changes
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record affected services
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+
+          backend=false
+          image_server=false
+
+          if [[ ! "$BEFORE_SHA" =~ ^[0-9a-f]{40}$ ]] ||
+             [[ "$BEFORE_SHA" == "0000000000000000000000000000000000000000" ]] ||
+             ! git cat-file -e "${BEFORE_SHA}^{commit}"; then
+            echo "The previous commit is unavailable; both services will deploy"
+            backend=true
+            image_server=true
+          else
+            git diff --name-only --no-renames "$BEFORE_SHA" "$HEAD_SHA" \
+              > changed-files.txt
+
+            while IFS= read -r changed_file; do
+              case "$changed_file" in
+                backend/*|.github/workflows/deploy-backend.yml)
+                  backend=true
+                  ;;
+                image-server/*|.github/workflows/deploy-image-server.yml)
+                  image_server=true
+                  ;;
+              esac
+            done < changed-files.txt
+          fi
+
+          jq --null-input \
+            --arg base "$BEFORE_SHA" \
+            --arg head "$HEAD_SHA" \
+            --argjson backend "$backend" \
+            --argjson image_server "$image_server" \
+            '{base: $base, head: $head, backend: $backend, image_server: $image_server}' \
+            > deployment-changes.json
+
+          jq . deployment-changes.json
+
+      - name: Upload deployment decisions
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-changes
+          path: deployment-changes.json
+          if-no-files-found: error
+          retention-days: 7
+
   backend-tests:
     name: Backend tests
     runs-on: ubuntu-latest
