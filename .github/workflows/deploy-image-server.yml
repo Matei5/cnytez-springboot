@@ -1,4 +1,4 @@
-name: Deploy backend to EC2
+name: Deploy image server to EC2
 
 on:
   workflow_run:
@@ -10,12 +10,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: backend-production
+  group: image-server-production
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Deploy CI-approved backend
+    name: Deploy CI-approved image server
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -32,25 +32,25 @@ jobs:
 
       - name: Configure SSH
         env:
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+          IMAGE_EC2_SSH_KEY: ${{ secrets.IMAGE_EC2_SSH_KEY }}
+          IMAGE_EC2_KNOWN_HOSTS: ${{ secrets.IMAGE_EC2_KNOWN_HOSTS }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_key
-          chmod 600 ~/.ssh/ec2_key
-          printf '%s\n' "$EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$IMAGE_EC2_SSH_KEY" > ~/.ssh/image_ec2_key
+          chmod 600 ~/.ssh/image_ec2_key
+          printf '%s\n' "$IMAGE_EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
       - name: Deploy with health verification and rollback
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_APP_DIR: ${{ vars.EC2_APP_DIR }}
+          IMAGE_EC2_HOST: ${{ secrets.IMAGE_EC2_HOST }}
+          IMAGE_EC2_USER: ${{ secrets.IMAGE_EC2_USER }}
+          IMAGE_EC2_APP_DIR: ${{ vars.IMAGE_EC2_APP_DIR }}
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          HOST=$(printf '%s' "$EC2_HOST" | tr -d '[:space:]')
-          USER=$(printf '%s' "$EC2_USER" | tr -d '[:space:]')
-          APP_DIR=${EC2_APP_DIR:-/home/ec2-user/cnytez-springboot}
+          HOST=$(printf '%s' "$IMAGE_EC2_HOST" | tr -d '[:space:]')
+          USER=$(printf '%s' "$IMAGE_EC2_USER" | tr -d '[:space:]')
+          APP_DIR=${IMAGE_EC2_APP_DIR:-/home/ec2-user/cnytez-springboot}
 
           [[ "$HOST" =~ ^[A-Za-z0-9.-]+$ ]]
           [[ "$USER" =~ ^[A-Za-z0-9._-]+$ ]]
@@ -58,15 +58,15 @@ jobs:
           [[ "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]]
 
           scp \
-            -i ~/.ssh/ec2_key \
+            -i ~/.ssh/image_ec2_key \
             -o BatchMode=yes \
             -o ConnectTimeout=15 \
-            backend/scripts/deploy-with-rollback.sh \
-            "$USER@$HOST:/tmp/cnytez-deploy-backend.sh"
+            image-server/scripts/deploy-with-rollback.sh \
+            "$USER@$HOST:/tmp/cnytez-deploy-image-server.sh"
 
           ssh \
-            -i ~/.ssh/ec2_key \
+            -i ~/.ssh/image_ec2_key \
             -o BatchMode=yes \
             -o ConnectTimeout=15 \
             "$USER@$HOST" \
-            "chmod 700 /tmp/cnytez-deploy-backend.sh && /tmp/cnytez-deploy-backend.sh '$APP_DIR' '$DEPLOY_SHA'"
+            "chmod 700 /tmp/cnytez-deploy-image-server.sh && /tmp/cnytez-deploy-image-server.sh '$APP_DIR' '$DEPLOY_SHA'"

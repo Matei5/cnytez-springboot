@@ -27,3 +27,13 @@ target/
 
 ### Secrets ###
 .env
+
+### Deployment state ###
+.deployment-backups/
+.last-successful-backend-sha
+.previous-backend-sha
+.last-successful-image-server-sha
+.previous-image-server-sha
+
+### Local ignored files ###
+ignore/
