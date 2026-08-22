@@ -1,4 +1,4 @@
-﻿using Amazon.S3;
+using Amazon.S3;
 using ImageMagick;
 using ImageProcessingServer.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace ImageProcessingServer.Controller
 {
     [ApiController]
-    public class ImageProcessingController: ControllerBase
+    public class ImageProcessingController : ControllerBase
     {
-        private readonly ImageProcessingService _imageProcessingService;
+        private readonly IImageProcessingService _imageProcessingService;
 
-        public ImageProcessingController(ImageProcessingService imageProcessingService)
+        public ImageProcessingController(IImageProcessingService imageProcessingService)
         {
             _imageProcessingService = imageProcessingService;
         }
@@ -21,7 +21,6 @@ namespace ImageProcessingServer.Controller
             try
             {
                 string fileUrl = await _imageProcessingService.ProcessImageAsync(file, filter);
-
                 return Ok(fileUrl);
             }
             catch (ArgumentException e)
@@ -36,13 +35,13 @@ namespace ImageProcessingServer.Controller
             {
                 return BadRequest("Image contents corrupt or invalid");
             }
-            catch (AmazonS3Exception e)
+            catch (AmazonS3Exception)
             {
-                return Problem(title: "AWS S3 Storage error", detail: e.Message, statusCode: 500);
+                return Problem(title: "AWS S3 Storage error", statusCode: 500);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                return Problem(title: "Unexpected error during file processing", detail: e.Message, statusCode: 500);
+                return Problem(title: "Unexpected error during file processing", statusCode: 500);
             }
         }
 

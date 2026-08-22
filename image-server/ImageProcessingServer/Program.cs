@@ -11,7 +11,12 @@ namespace ImageProcessingServer
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
-            builder.Services.AddScoped<ImageProcessingService>();
+            builder.Services.AddHealthChecks();
+            builder.Services.AddSingleton<IAmazonS3>(
+                _ => new AmazonS3Client(RegionEndpoint.EUCentral1)
+            );
+            builder.Services.AddScoped<IImageStorage, S3ImageStorage>();
+            builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
 
             builder.WebHost.ConfigureKestrel(serverOptions =>
             {
@@ -22,6 +27,8 @@ namespace ImageProcessingServer
 
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHealthChecks("/health/live");
+            app.MapHealthChecks("/health/ready");
 
             app.Run();
         }
