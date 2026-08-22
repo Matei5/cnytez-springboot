@@ -9,3 +9,9 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8123/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s

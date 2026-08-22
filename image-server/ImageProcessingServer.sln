@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessingServer.Servi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessingServer", "ImageProcessingServer\ImageProcessingServer.csproj", "{BCF66929-8DED-4CD7-9103-0AF1CCCCAC8C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessingServer.Tests", "ImageProcessingServer.Tests\ImageProcessingServer.Tests.csproj", "{A2A1614D-692C-47E4-9C18-6FA8561F7850}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{BCF66929-8DED-4CD7-9103-0AF1CCCCAC8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCF66929-8DED-4CD7-9103-0AF1CCCCAC8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCF66929-8DED-4CD7-9103-0AF1CCCCAC8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2A1614D-692C-47E4-9C18-6FA8561F7850}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2A1614D-692C-47E4-9C18-6FA8561F7850}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2A1614D-692C-47E4-9C18-6FA8561F7850}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2A1614D-692C-47E4-9C18-6FA8561F7850}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

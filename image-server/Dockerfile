@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     libgdiplus \
     libc6-dev \
     libfontconfig1 \
+    curl \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
