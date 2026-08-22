@@ -36,6 +36,7 @@
 - [Testing & Quality Assurance](#-testing--quality-assurance)
 - [API Quick Reference](#-api-quick-reference)
 - [CI/CD & Deployment Overview](#-cicd--deployment-overview)
+- [Backend-only EC2 Deployment Guide](backend/EC2_DEPLOYMENT.md)
 
 ---
 
@@ -66,7 +67,7 @@ The application is architected as microservices running across AWS EC2 instances
 - **Image Processing**: Integration with a .NET 8 microservice for applying server-side visual image filters (e.g., Grayscale, Inverted, Sepia, Blur, Pixelated).
 - **Database Evolution (Flyway)**: Versioned database migration scripts ensuring consistent schema evolution across local and production databases.
 - **Test Suite**: Unit, Integration, and E2E testing powered by JUnit 5 and Testcontainers PostgreSQL.
-- **Automated CI/CD**: Automated build, test, and deployment to AWS EC2 via GitHub Actions SSH pipelines.
+- **Automated CI/CD**: Tested, immutable backend images are published to Amazon ECR and deployed to EC2 through GitHub OIDC and AWS Systems Manager.
 
 ---
 
@@ -118,7 +119,7 @@ The application is architected as microservices running across AWS EC2 instances
 | **Object Mapping** | **MapStruct 1.6.3 & Lombok** | Compile-time entity <-> DTO mapping and boilerplate reduction |
 | **Testing** | **JUnit 5, Mockito, Testcontainers** | Unit, slice, and PostgreSQL containerized integration testing |
 | **Containerization**| **Docker & Docker Compose** | Docker packaging and local microservice orchestration |
-| **CI/CD** | **GitHub Actions** | CI pipeline (build/test) and CD pipeline (SSH deploy to EC2) |
+| **CI/CD** | **GitHub Actions** | CI gates, immutable ECR images, GitHub OIDC, and SSM deployment to EC2 |
 | **Cloud Hosting** | **AWS EC2** | Cloud container host |
 
 ---
@@ -270,9 +271,10 @@ Automated pipelines are implemented using **GitHub Actions**:
 
 2. **Continuous Deployment ([`deploy-backend.yml`](.github/workflows/deploy-backend.yml), [`deploy-image-server.yml`](.github/workflows/deploy-image-server.yml))**:
    - Triggers only after the complete CI workflow succeeds for a push to `main`.
-   - Uses separate SSH credentials with host-key verification for the backend and image-server EC2 instances.
-   - Deploys the exact CI-approved commit, verifies database-backed readiness, and rolls back to the previous commit when health checks fail.
+   - Publishes the backend image to private Amazon ECR with the exact CI-approved commit SHA and deploys it through AWS Systems Manager without backend SSH credentials.
+   - Deploys the exact CI-approved commit, verifies database-backed readiness, and rolls back to the previous backend image when health checks fail.
+   - The separate image-server workflow continues to use its own deployment configuration.
    - Creates a PostgreSQL backup before backend deployment; database restoration remains an explicit manual recovery action.
    - Independently rebuilds the image-server stack, verifies `/health/ready` on port `8123`, and rolls it back if unhealthy.
 
-For detailed workflow breakdowns, secret configurations, and troubleshooting, see the [CI/CD Documentation](.github/CI_CD.md).
+For detailed workflow behavior, see the [CI/CD Documentation](.github/CI_CD.md). For a complete backend-only installation on a new EC2 instance, follow the [Backend EC2 Deployment Guide](backend/EC2_DEPLOYMENT.md).

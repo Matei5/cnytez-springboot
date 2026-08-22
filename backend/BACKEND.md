@@ -22,6 +22,7 @@
 - [Testing](#-testing)
 - [API Endpoints Overview](#-api-endpoints-overview)
 - [Containerization](#-containerization)
+- [Production deployment on EC2](EC2_DEPLOYMENT.md)
 
 ---
 
@@ -209,3 +210,7 @@ For complete JSON request payloads, response schemas, and interactive testing, r
 The backend uses a multi-stage Docker build (`Dockerfile`):
 1. **Stage 1 (Build)**: `maven:3.9-amazoncorretto-25` compiles and packages the JAR.
 2. **Stage 2 (Runtime)**: `amazoncorretto:25-alpine` provides a lightweight Alpine-based Java runtime environment for running the compiled JAR.
+
+## Production deployment on EC2
+
+For the complete backend-only AWS setup, including EC2 bootstrap, IAM roles, GitHub OIDC, Amazon ECR, Systems Manager deployment, health verification, backups, and rollback, follow the [Backend-only EC2 deployment guide](EC2_DEPLOYMENT.md).
