@@ -45,6 +45,8 @@ services:
     volumes:
       # data is saved on volume so that database information isn't lost after stop
       - postgres_data:/var/lib/postgresql/data
+      # initialize baseline schema on empty databases for fresh local setups
+      - ./src/test/resources/db/legacy-schema.sql:/docker-entrypoint-initdb.d/01-legacy-schema.sql:ro
     # check that postgres accepts connections before marking the service healthy
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d cnytez_db"]
