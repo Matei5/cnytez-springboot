@@ -46,6 +46,8 @@ Each deployment downloads the artifact from the exact CI run that triggered it a
 
 ## Required production configuration
 
+The backend deployment uses GitHub OIDC, Amazon ECR, and AWS Systems Manager. The complete setup procedure is documented in the [backend-only EC2 deployment guide](../backend/EC2_DEPLOYMENT.md).
+
 Configure these values in the GitHub `production` environment:
 
 | Type | Name | Description |

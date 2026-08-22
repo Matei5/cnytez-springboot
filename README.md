@@ -36,6 +36,7 @@
 - [Testing & Quality Assurance](#-testing--quality-assurance)
 - [API Quick Reference](#-api-quick-reference)
 - [CI/CD & Deployment Overview](#-cicd--deployment-overview)
+- [Backend-only EC2 Deployment Guide](backend/EC2_DEPLOYMENT.md)
 
 ---
 
@@ -277,4 +278,4 @@ Automated pipelines are implemented using **GitHub Actions**:
    - Creates a PostgreSQL backup before backend deployment; database restoration remains an explicit manual recovery action.
    - Independently rebuilds the image-server stack, verifies `/health/ready` on port `8123`, and rolls it back if unhealthy.
 
-For detailed workflow breakdowns, secret configurations, and troubleshooting, see the [CI/CD Documentation](.github/CI_CD.md).
+For detailed workflow behavior, see the [CI/CD Documentation](.github/CI_CD.md). For a complete backend-only installation on a new EC2 instance, follow the [Backend EC2 Deployment Guide](backend/EC2_DEPLOYMENT.md).
