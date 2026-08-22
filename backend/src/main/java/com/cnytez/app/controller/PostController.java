@@ -25,7 +25,6 @@ public class PostController {
 
     private final PostService postService;
 
-    // GET /api/posts
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts(
             @RequestParam(required = false) String subreddit
@@ -37,7 +36,6 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/posts/{id}
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PostDto>> getPostById(@PathVariable UUID id) {
         PostDto post = postService.getPostById(id);
@@ -80,7 +78,6 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    // DELETE /api/posts/{id}?requestingUserId={userId}
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiMessageResponse> deletePost(@PathVariable UUID id) {
         postService.deletePost(id);
