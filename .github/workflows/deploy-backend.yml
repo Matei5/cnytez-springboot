@@ -7,6 +7,7 @@ on:
     branches: ["main"]
 
 permissions:
+  actions: read
   contents: read
   id-token: write
 
@@ -15,12 +16,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy CI-approved backend
+  changes:
+    name: Check for backend changes
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      deploy: ${{ steps.decision.outputs.deploy }}
+
+    steps:
+      - name: Download CI deployment decisions
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-changes
+          path: deployment-decision
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Validate backend decision
+        id: decision
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          FILE=deployment-decision/deployment-changes.json
+          jq --exit-status \
+            --arg head "$HEAD_SHA" \
+            '.head == $head and (.backend | type == "boolean")' \
+            "$FILE" >/dev/null
+
+          DEPLOY=$(jq --raw-output '.backend' "$FILE")
+          echo "deploy=$DEPLOY" >> "$GITHUB_OUTPUT"
+          echo "Backend deployment required: $DEPLOY"
+
+  deploy:
+    name: Deploy CI-approved backend
+    needs: changes
+    if: needs.changes.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production

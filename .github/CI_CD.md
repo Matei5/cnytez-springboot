@@ -3,8 +3,8 @@
 The repository uses three GitHub Actions workflows:
 
 - `ci.yml` validates every pull request and every push to `main`.
-- `deploy-backend.yml` runs only after the complete CI workflow succeeds for a push to `main`.
-- `deploy-image-server.yml` independently deploys the image service to its own EC2 host after the same CI gate succeeds.
+- `deploy-backend.yml` runs after the complete CI workflow succeeds for a push to `main`, but deploys only when backend files changed.
+- `deploy-image-server.yml` independently deploys the image service after the same CI gate succeeds, but only when image-server files changed.
 
 ## CI gate
 
@@ -22,6 +22,10 @@ The CI workflow runs these checks in parallel:
 
 Test reports are uploaded as workflow artifacts, including on failed test runs.
 
+For pushes to `main`, CI also compares the complete pushed commit range and uploads a small `deployment-changes` artifact. This records whether backend or image-server files changed. Performing this check in the push-triggered CI workflow covers pull-request merges and pushes containing more than one commit.
+
+New commits cancel outdated CI runs on the same pull request. Runs for `main` are not cancelled; they are processed in order so that a later unrelated commit cannot hide a service change from an earlier push.
+
 Configure the `main` branch protection rule to require the `CI gate` status check before merging.
 
 ## Deployment gate
@@ -32,8 +36,13 @@ Both deployment workflows are triggered with `workflow_run`, not directly by `pu
 2. CI concluded successfully.
 3. CI was triggered by a push.
 4. The tested branch was `main`.
+5. The CI artifact marks that service as changed.
 
 The workflow checks out and deploys the exact commit SHA validated by CI.
+
+The backend is marked for deployment when `backend/**` or `.github/workflows/deploy-backend.yml` changes. The image server is marked when `image-server/**` or `.github/workflows/deploy-image-server.yml` changes. If both areas change, both services deploy. Documentation-only changes deploy neither service. Renames are evaluated as a removal and an addition so moving a file out of a service still marks that service as changed.
+
+Each deployment downloads the artifact from the exact CI run that triggered it and verifies that its recorded commit matches the CI-approved commit. A missing, malformed, or mismatched artifact fails the change-check job instead of starting a deployment. The production environment and its credentials are accessed only after the affected-service check returns `true`.
 
 ## Required production configuration
 
@@ -44,9 +53,9 @@ Configure these values in the GitHub `production` environment:
 | Type | Name | Description |
 | --- | --- | --- |
 | Variable | `BACKEND_AWS_ROLE_ARN` | IAM role assumed by GitHub Actions through OIDC. |
-| Variable | `BACKEND_AWS_REGION` | AWS Region containing the backend EC2 instance and ECR repository. |
-| Variable | `BACKEND_ECR_REPOSITORY` | Private ECR repository used for immutable backend images. |
-| Variable | `BACKEND_EC2_INSTANCE_ID` | EC2 instance targeted by the SSM deployment command. |
+| Variable | `BACKEND_AWS_REGION` | Region containing the backend EC2 instance and ECR repository. |
+| Variable | `BACKEND_ECR_REPOSITORY` | Private ECR repository containing immutable backend images. |
+| Variable | `BACKEND_EC2_INSTANCE_ID` | Backend instance targeted by the SSM command. |
 | Variable | `EC2_APP_DIR` | Absolute path of the repository on EC2. Defaults to `/home/ec2-user/cnytez-springboot`. |
 | Secret | `IMAGE_EC2_HOST` | Image-server EC2 DNS name or IPv4 address. |
 | Secret | `IMAGE_EC2_USER` | SSH account on the image-server EC2 host. |
@@ -54,7 +63,7 @@ Configure these values in the GitHub `production` environment:
 | Secret | `IMAGE_EC2_KNOWN_HOSTS` | Verified SSH host-key entry for the image-server EC2 host. |
 | Variable | `IMAGE_EC2_APP_DIR` | Absolute repository path on the image-server EC2 host. Defaults to `/home/ec2-user/cnytez-springboot`. |
 
-The backend EC2 host must have Git, Docker with Compose, curl, AWS CLI, an active SSM agent, an EC2 instance role with SSM and ECR-pull access, and a clean deployment checkout. Untracked files such as `backend/.env` are allowed; tracked local modifications stop deployment.
+The backend EC2 host must have Git, Docker with Compose, curl, AWS CLI, an active SSM agent, an instance role with SSM and ECR pull access, and a clean deployment checkout.
 
 The image-server EC2 host must have:
 
@@ -75,7 +84,7 @@ The image server exposes `/health/live` and `/health/ready`, and its Compose ser
 
 ## Rollback behavior
 
-The workflow sends `backend/scripts/deploy-with-rollback.sh` to EC2 through an SSM Run Command and executes it with the CI-approved commit SHA and immutable ECR image. The script:
+The workflow sends `backend/scripts/deploy-with-rollback.sh` to EC2 through SSM and executes it with the CI-approved commit SHA and immutable ECR image. The script:
 
 1. Refuses to overwrite tracked modifications on EC2.
 2. Records the currently deployed commit.

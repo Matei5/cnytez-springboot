@@ -67,7 +67,7 @@ The application is architected as microservices running across AWS EC2 instances
 - **Image Processing**: Integration with a .NET 8 microservice for applying server-side visual image filters (e.g., Grayscale, Inverted, Sepia, Blur, Pixelated).
 - **Database Evolution (Flyway)**: Versioned database migration scripts ensuring consistent schema evolution across local and production databases.
 - **Test Suite**: Unit, Integration, and E2E testing powered by JUnit 5 and Testcontainers PostgreSQL.
-- **Automated CI/CD**: Tested, immutable backend images are published to Amazon ECR and deployed to EC2 through GitHub OIDC and AWS Systems Manager.
+- **Automated CI/CD**: Test-gated deployments with immutable backend images in Amazon ECR, backend delivery through AWS Systems Manager, and a separate image-server deployment.
 
 ---
 
@@ -119,7 +119,7 @@ The application is architected as microservices running across AWS EC2 instances
 | **Object Mapping** | **MapStruct 1.6.3 & Lombok** | Compile-time entity <-> DTO mapping and boilerplate reduction |
 | **Testing** | **JUnit 5, Mockito, Testcontainers** | Unit, slice, and PostgreSQL containerized integration testing |
 | **Containerization**| **Docker & Docker Compose** | Docker packaging and local microservice orchestration |
-| **CI/CD** | **GitHub Actions** | CI gates, immutable ECR images, GitHub OIDC, and SSM deployment to EC2 |
+| **CI/CD** | **GitHub Actions** | CI gates, service-aware deployments, GitHub OIDC, Amazon ECR, SSM, and EC2 |
 | **Cloud Hosting** | **AWS EC2** | Cloud container host |
 
 ---
@@ -271,9 +271,10 @@ Automated pipelines are implemented using **GitHub Actions**:
 
 2. **Continuous Deployment ([`deploy-backend.yml`](.github/workflows/deploy-backend.yml), [`deploy-image-server.yml`](.github/workflows/deploy-image-server.yml))**:
    - Triggers only after the complete CI workflow succeeds for a push to `main`.
-   - Publishes the backend image to private Amazon ECR with the exact CI-approved commit SHA and deploys it through AWS Systems Manager without backend SSH credentials.
-   - Deploys the exact CI-approved commit, verifies database-backed readiness, and rolls back to the previous backend image when health checks fail.
-   - The separate image-server workflow continues to use its own deployment configuration.
+   - Uses CI-recorded path changes to deploy only the affected service; documentation-only changes deploy neither service.
+   - Publishes immutable backend images to private Amazon ECR and deploys the backend through AWS Systems Manager using short-lived GitHub OIDC credentials.
+   - Deploys the image server independently to its own EC2 instance using its separate SSH configuration.
+   - Deploys the exact CI-approved commit, verifies readiness, and rolls back the affected service when health checks fail.
    - Creates a PostgreSQL backup before backend deployment; database restoration remains an explicit manual recovery action.
    - Independently rebuilds the image-server stack, verifies `/health/ready` on port `8123`, and rolls it back if unhealthy.
 
