@@ -1,28 +1,174 @@
-name: Java CI with Maven
+name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  backend-tests:
+    name: Backend tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 25
-      uses: actions/setup-java@v4
-      with:
-        java-version: '25'
-        distribution: 'corretto'
-        cache: maven
-        
-    - name: Build with Maven
-      working-directory: ./backend
-      # chmod needed to make the mvnw script executable
-      run: | 
-        chmod +x ./mvnw
-        ./mvnw clean package
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: corretto
+          cache: maven
+
+      - name: Run backend tests
+        working-directory: backend
+        run: |
+          chmod +x ./mvnw
+          ./mvnw clean verify -DexcludedGroups=migration,cross-service
+
+      - name: Upload backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+
+  flyway-migration-tests:
+    name: Flyway migration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: corretto
+          cache: maven
+
+      - name: Validate legacy-to-current PostgreSQL migrations
+        working-directory: backend
+        run: |
+          chmod +x ./mvnw
+          ./mvnw test -Dgroups=migration -Dtest=FlywayMigrationTest
+
+      - name: Upload Flyway test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flyway-test-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+
+  image-server-tests:
+    name: Image server tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Run image server tests
+        working-directory: image-server
+        run: >-
+          dotnet test ImageProcessingServer.Tests/ImageProcessingServer.Tests.csproj
+          --configuration Release
+          --logger "trx;LogFileName=image-server-tests.trx"
+          --collect "XPlat Code Coverage"
+
+      - name: Upload image server test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-server-test-reports
+          path: image-server/ImageProcessingServer.Tests/TestResults/
+          if-no-files-found: ignore
+
+  image-round-trip-test:
+    name: Backend and image server round-trip test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: corretto
+          cache: maven
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Run backend and image server round-trip test
+        working-directory: backend
+        run: |
+          chmod +x ./mvnw
+          ./mvnw test -Dgroups=cross-service -Dtest=ImageServerRoundTripTest
+
+      - name: Upload round-trip test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-round-trip-test-report
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+
+  container-builds:
+    name: Container build (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            context: backend
+          - service: image-server
+            context: image-server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container
+        run: docker build --tag "cnytez-${{ matrix.service }}:ci" "${{ matrix.context }}"
+
+  ci-gate:
+    name: CI gate
+    if: always()
+    needs:
+      - backend-tests
+      - flyway-migration-tests
+      - image-server-tests
+      - image-round-trip-test
+      - container-builds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every CI check to pass
+        run: |
+          test "${{ needs.backend-tests.result }}" = "success"
+          test "${{ needs.flyway-migration-tests.result }}" = "success"
+          test "${{ needs.image-server-tests.result }}" = "success"
+          test "${{ needs.image-round-trip-test.result }}" = "success"
+          test "${{ needs.container-builds.result }}" = "success"
