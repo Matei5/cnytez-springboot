@@ -54,8 +54,14 @@ jobs:
           [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]
 
           IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker build --tag "$IMAGE" backend
-          docker push "$IMAGE"
+          if aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids "imageTag=$IMAGE_TAG" >/dev/null 2>&1; then
+            echo "The immutable image already exists; reusing it"
+          else
+            docker build --tag "$IMAGE" backend
+            docker push "$IMAGE"
+          fi
 
           aws ecr describe-images \
             --repository-name "$ECR_REPOSITORY" \
@@ -80,6 +86,8 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_APP_DIR: ${{ vars.EC2_APP_DIR }}
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          BACKEND_AWS_REGION: ${{ vars.BACKEND_AWS_REGION }}
+          BACKEND_ECR_REPOSITORY: ${{ vars.BACKEND_ECR_REPOSITORY }}
         run: |
           HOST=$(printf '%s' "$EC2_HOST" | tr -d '[:space:]')
           USER=$(printf '%s' "$EC2_USER" | tr -d '[:space:]')
@@ -89,6 +97,10 @@ jobs:
           [[ "$USER" =~ ^[A-Za-z0-9._-]+$ ]]
           [[ "$APP_DIR" =~ ^/[A-Za-z0-9._/-]+$ ]]
           [[ "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$BACKEND_AWS_REGION" == "us-east-1" ]]
+          [[ "$BACKEND_ECR_REPOSITORY" == "cnytez-backend" ]]
+
+          BACKEND_IMAGE="386807259133.dkr.ecr.$BACKEND_AWS_REGION.amazonaws.com/$BACKEND_ECR_REPOSITORY:$DEPLOY_SHA"
 
           scp \
             -i ~/.ssh/ec2_key \
@@ -102,4 +114,4 @@ jobs:
             -o BatchMode=yes \
             -o ConnectTimeout=15 \
             "$USER@$HOST" \
-            "chmod 700 /tmp/cnytez-deploy-backend.sh && /tmp/cnytez-deploy-backend.sh '$APP_DIR' '$DEPLOY_SHA'"
+            "chmod 700 /tmp/cnytez-deploy-backend.sh && /tmp/cnytez-deploy-backend.sh '$APP_DIR' '$DEPLOY_SHA' '$BACKEND_IMAGE'"
