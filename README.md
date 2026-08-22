@@ -12,11 +12,11 @@
 [![AWS EC2](https://img.shields.io/badge/Deploy-AWS%20EC2-FF9900.svg?logo=amazonec2)](https://aws.amazon.com/ec2/)
 
 <p align="center">
-  A containerized REST API and microservice platform for <strong>Team Cnytez's Reddit Backend</strong>, built as part of the <strong>Cognyte Zero to Hero (ZtH)</strong> program.
+  Containerized REST API and microservice platform for <strong>Team Cnytez's Reddit</strong>, developed as part of the <strong>Cognyte Zero to Hero (ZtH)</strong> program.
 </p>
 
 <p align="center">
-  This repository encompasses the <strong>backend services only</strong>. The core objective was to design, develop, test, and deploy a backend architecture tailored specifically to satisfy the API contracts, data models, and feature requirements defined by the <a href="https://zth-cog-fe.netlify.app/api-docs">Frontend Client API Specifications</a>.
+  This repository contains the <strong>backend services only</strong>, built and tested to satisfy the API contracts, data models, and feature requirements defined by the <a href="https://zth-cog-fe.netlify.app/api-docs">Frontend Client API Specification</a>.
 </p>
 
 </div>
@@ -77,21 +77,26 @@ The application is architected as microservices running across AWS EC2 instances
 ├── .github/                     # CI/CD workflows and repository configuration
 │   ├── workflows/               # GitHub Actions CI & CD pipeline definitions
 │   │   ├── ci.yml               # Continuous Integration: Maven build & test execution
-│   │   └── deploy-backend.yml   # Continuous Deployment: Automated AWS EC2 deployment via SSH
+│   │   ├── deploy-backend.yml       # Deploys the Spring Boot backend EC2 stack
+│   │   └── deploy-image-server.yml  # Deploys the separate image-server EC2 stack
 │   └── CI_CD.md                 # CI/CD documentation
 │
 ├── backend/                     # Spring Boot 4 REST API service
-│   ├── src/                     # Java source code, configs, and migration scripts
+│   ├── src/                     # Java source code, configs, migration scripts, and tests
+│   ├── scripts/                 # EC2 automated deployment & rollback scripts
 │   ├── Dockerfile               # Multi-stage container build definition
 │   ├── docker-compose.yml       # Local backend & PostgreSQL stack orchestration
 │   ├── pom.xml                  # Maven dependencies & build plugins
 │   └── BACKEND.md               # Backend architecture & setup documentation
 │
 ├── image-server/                # .NET 8 Image Processing Microservice
-│   ├── ImageProcessingServer/   # ASP.NET Core source code & filter logic
-│   ├── Dockerfile               # .NET 8 container build definition
-│   ├── docker-compose.yml       # Standalone image service container config
-│   └── README.md                # Image processing microservice documentation
+│   ├── ImageProcessingServer/              # ASP.NET Core source code & filter logic
+│   ├── ImageProcessingServer.Tests/        # xUnit test suite (unit, HTTP, filter math, S3 mock)
+│   ├── ImageProcessingServer.ContractHost/ # Local in-memory runner for contract testing
+│   ├── scripts/                            # EC2 automated deployment & rollback scripts
+│   ├── Dockerfile                          # .NET 8 container build definition
+│   ├── docker-compose.yml                  # Standalone image service container config
+│   └── README.md                           # Image processing microservice documentation
 │
 ├── .gitattributes               # Line-ending normalization (LF for mvnw)
 ├── .gitignore                   # Git ignore rules for Maven, IDEs, and environments
@@ -209,6 +214,9 @@ cd backend
 # Run integration tests (spins up temporary PostgreSQL via Testcontainers)
 ./mvnw test -Dtest="*IntegrationTest"
 
+# Validate Flyway upgrades from the legacy PostgreSQL schema
+./mvnw test -Dgroups=migration -Dtest="FlywayMigrationTest"
+
 # Run end-to-end tests
 ./mvnw test -Dtest="*E2ETest"
 
@@ -221,13 +229,20 @@ cd backend
 
 *Note: Ensure Docker Desktop is running before executing `./mvnw test`, as Testcontainers requires Docker to spin up temporary PostgreSQL database instances.*
 
+Run the image-processing service tests separately:
+
+```bash
+cd image-server
+dotnet test ImageProcessingServer.Tests/ImageProcessingServer.Tests.csproj --configuration Release
+```
+
 ---
 
 ## 📡 API Quick Reference
 
 | Module | Method | Endpoint | Access | Summary |
 | :---: | :---: | :--- | :---: | :--- |
-| **Health** | `GET` | `/health` | Public | System status and database connectivity check |
+| **Health** | `GET` | `/actuator/health/readiness` | Public | Application readiness and database connectivity check |
 | **Auth** | `POST` | `/api/auth/register` | Public | Register a new user account |
 | **Auth** | `POST` | `/api/auth/login` | Public | Authenticate user & receive JWT access token |
 | **Subreddits** | `GET` | `/api/subreddits` | Public | List all available subreddits |
@@ -250,11 +265,14 @@ Automated pipelines are implemented using **GitHub Actions**:
 
 1. **Continuous Integration ([`ci.yml`](.github/workflows/ci.yml))**:
    - Triggers on every push and PR targeting the `main` branch.
-   - Sets up Amazon Corretto 25 JDK, caches Maven dependencies, and executes `./mvnw clean package`.
+   - Runs backend tests, dedicated PostgreSQL/Flyway upgrade tests, image-server tests, a backend-to-image-server round-trip test, and both container builds.
+   - Produces a final `CI gate` status only when every required check succeeds.
 
-2. **Continuous Deployment ([`deploy-backend.yml`](.github/workflows/deploy-backend.yml))**:
-   - Triggers automatically when backend code is merged to `main`, or via manual `workflow_dispatch`.
-   - Utilizes SSH with host key verification (`known_hosts`) to connect to the AWS EC2 instance.
-   - Executes remote deployment scripts to pull the latest code and rebuild and restart containers with Docker Compose.
+2. **Continuous Deployment ([`deploy-backend.yml`](.github/workflows/deploy-backend.yml), [`deploy-image-server.yml`](.github/workflows/deploy-image-server.yml))**:
+   - Triggers only after the complete CI workflow succeeds for a push to `main`.
+   - Uses separate SSH credentials with host-key verification for the backend and image-server EC2 instances.
+   - Deploys the exact CI-approved commit, verifies database-backed readiness, and rolls back to the previous commit when health checks fail.
+   - Creates a PostgreSQL backup before backend deployment; database restoration remains an explicit manual recovery action.
+   - Independently rebuilds the image-server stack, verifies `/health/ready` on port `8123`, and rolls it back if unhealthy.
 
 For detailed workflow breakdowns, secret configurations, and troubleshooting, see the [CI/CD Documentation](.github/CI_CD.md).
