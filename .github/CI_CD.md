@@ -37,14 +37,16 @@ The workflow checks out and deploys the exact commit SHA validated by CI.
 
 ## Required production configuration
 
+The backend deployment uses GitHub OIDC, Amazon ECR, and AWS Systems Manager. The complete setup procedure is documented in the [backend-only EC2 deployment guide](../backend/EC2_DEPLOYMENT.md).
+
 Configure these values in the GitHub `production` environment:
 
 | Type | Name | Description |
 | --- | --- | --- |
-| Secret | `EC2_HOST` | Backend EC2 DNS name or IPv4 address. |
-| Secret | `EC2_USER` | SSH account, such as `ec2-user`. |
-| Secret | `EC2_SSH_KEY` | Private SSH key in OpenSSH format. |
-| Secret | `EC2_KNOWN_HOSTS` | Verified SSH host-key entry. |
+| Variable | `BACKEND_AWS_ROLE_ARN` | IAM role assumed by GitHub Actions through OIDC. |
+| Variable | `BACKEND_AWS_REGION` | AWS Region containing the backend EC2 instance and ECR repository. |
+| Variable | `BACKEND_ECR_REPOSITORY` | Private ECR repository used for immutable backend images. |
+| Variable | `BACKEND_EC2_INSTANCE_ID` | EC2 instance targeted by the SSM deployment command. |
 | Variable | `EC2_APP_DIR` | Absolute path of the repository on EC2. Defaults to `/home/ec2-user/cnytez-springboot`. |
 | Secret | `IMAGE_EC2_HOST` | Image-server EC2 DNS name or IPv4 address. |
 | Secret | `IMAGE_EC2_USER` | SSH account on the image-server EC2 host. |
@@ -52,7 +54,9 @@ Configure these values in the GitHub `production` environment:
 | Secret | `IMAGE_EC2_KNOWN_HOSTS` | Verified SSH host-key entry for the image-server EC2 host. |
 | Variable | `IMAGE_EC2_APP_DIR` | Absolute repository path on the image-server EC2 host. Defaults to `/home/ec2-user/cnytez-springboot`. |
 
-Both EC2 hosts must have:
+The backend EC2 host must have Git, Docker with Compose, curl, AWS CLI, an active SSM agent, an EC2 instance role with SSM and ECR-pull access, and a clean deployment checkout. Untracked files such as `backend/.env` are allowed; tracked local modifications stop deployment.
+
+The image-server EC2 host must have:
 
 - Git with access to this repository.
 - Docker with the Compose plugin.
@@ -71,13 +75,13 @@ The image server exposes `/health/live` and `/health/ready`, and its Compose ser
 
 ## Rollback behavior
 
-The workflow copies `backend/scripts/deploy-with-rollback.sh` to EC2 and executes it with the CI-approved commit SHA. The script:
+The workflow sends `backend/scripts/deploy-with-rollback.sh` to EC2 through an SSM Run Command and executes it with the CI-approved commit SHA and immutable ECR image. The script:
 
 1. Refuses to overwrite tracked modifications on EC2.
 2. Records the currently deployed commit.
 3. Creates a PostgreSQL custom-format backup when the database is running.
 4. Checks out the exact approved commit.
-5. Rebuilds and starts the backend stack.
+5. Pulls and starts the exact CI-approved backend image without rebuilding it on EC2.
 6. Waits up to two minutes for readiness.
 7. Restores the previous application commit if deployment stays unhealthy.
 
