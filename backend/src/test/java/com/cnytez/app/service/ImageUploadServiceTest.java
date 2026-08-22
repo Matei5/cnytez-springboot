@@ -1,23 +1,45 @@
 package com.cnytez.app.service;
 
+import com.cnytez.app.exception.ImageServerFailureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ImageUploadServiceTest {
 
     private ImageUploadService imageUploadService;
+    private RestClient restClient;
+    private RestClient.ResponseSpec responseSpec;
 
     @BeforeEach
     void setUp() {
-        imageUploadService = new ImageUploadService("http://localhost:8080");
+        restClient = mock(RestClient.class);
+        imageUploadService = new ImageUploadService("http://localhost:8080", restClient);
+    }
+
+    private void stubRequestPipeline() {
+        RestClient.RequestBodyUriSpec uriSpec = mock(RestClient.RequestBodyUriSpec.class);
+        RestClient.RequestBodySpec bodySpec = mock(RestClient.RequestBodySpec.class);
+        responseSpec = mock(RestClient.ResponseSpec.class);
+
+        when(restClient.post()).thenReturn(uriSpec);
+        when(uriSpec.uri(any(String.class))).thenReturn(bodySpec);
+        when(bodySpec.contentType(any())).thenReturn(bodySpec);
+        when(bodySpec.body(any(MultiValueMap.class))).thenReturn(bodySpec);
+        when(bodySpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
     }
 
     @Test
@@ -34,24 +56,10 @@ class ImageUploadServiceTest {
     }
 
     @Test
-    void sendImageToServer_Success() throws Exception {
+    void sendImageToServer_Success() {
         // arrange
-        org.springframework.web.client.RestClient restClientMock = org.mockito.Mockito.mock(org.springframework.web.client.RestClient.class);
-        org.springframework.web.client.RestClient.RequestBodyUriSpec uriSpecMock = org.mockito.Mockito.mock(org.springframework.web.client.RestClient.RequestBodyUriSpec.class);
-        org.springframework.web.client.RestClient.RequestBodySpec bodySpecMock = org.mockito.Mockito.mock(org.springframework.web.client.RestClient.RequestBodySpec.class);
-        org.springframework.web.client.RestClient.ResponseSpec responseSpecMock = org.mockito.Mockito.mock(org.springframework.web.client.RestClient.ResponseSpec.class);
-        
-        java.lang.reflect.Field field = ImageUploadService.class.getDeclaredField("restClient");
-        field.setAccessible(true);
-        field.set(imageUploadService, restClientMock);
-
-        org.mockito.Mockito.when(restClientMock.post()).thenReturn(uriSpecMock);
-        org.mockito.Mockito.when(uriSpecMock.uri(org.mockito.ArgumentMatchers.anyString())).thenReturn(bodySpecMock);
-        org.mockito.Mockito.when(bodySpecMock.contentType(org.mockito.ArgumentMatchers.any())).thenReturn(bodySpecMock);
-        org.mockito.Mockito.when(bodySpecMock.body(org.mockito.ArgumentMatchers.any(org.springframework.util.MultiValueMap.class))).thenReturn(bodySpecMock);
-        org.mockito.Mockito.when(bodySpecMock.retrieve()).thenReturn(responseSpecMock);
-        org.mockito.Mockito.when(responseSpecMock.onStatus(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any())).thenReturn(responseSpecMock);
-        org.mockito.Mockito.when(responseSpecMock.body(String.class)).thenReturn("\"http://example.com/image.png\"");
+        stubRequestPipeline();
+        when(responseSpec.body(String.class)).thenReturn("http://example.com/image.png");
 
         MultipartFile file = new MockMultipartFile("file", "test.png", "image/png", "test".getBytes());
 
@@ -60,5 +68,44 @@ class ImageUploadServiceTest {
 
         // assert
         assertEquals("http://example.com/image.png", result);
+    }
+
+    @Test
+    void sendImageToServer_QuotedUrl_RemovesSurroundingQuotes() {
+        // arrange
+        stubRequestPipeline();
+        when(responseSpec.body(String.class)).thenReturn("\"http://example.com/image.png\"");
+        MultipartFile file = new MockMultipartFile(
+                "file",
+                "test.png",
+                "image/png",
+                "test".getBytes()
+        );
+
+        // act
+        String result = imageUploadService.sendImageToServer(file, "filter");
+
+        // assert
+        assertEquals("http://example.com/image.png", result);
+    }
+
+    @Test
+    void sendImageToServer_EmptyResponse_ThrowsImageServerFailureException() {
+        // arrange
+        stubRequestPipeline();
+        when(responseSpec.body(String.class)).thenReturn(null);
+        MultipartFile file = new MockMultipartFile(
+                "file",
+                "test.png",
+                "image/png",
+                "test".getBytes()
+        );
+
+        // act & assert
+        var exception = assertThrows(
+                ImageServerFailureException.class,
+                () -> imageUploadService.sendImageToServer(file, "filter")
+        );
+        assertEquals("Image server returned an empty response", exception.getMessage());
     }
 }
