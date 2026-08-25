@@ -29,6 +29,14 @@ spring:
 image-server:
   url: "http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123"
 
+content-moderation:
+  enabled: "${MODERATION_ENABLED:false}"
+  openai:
+    api-key: "${OPENAI_API_KEY:}"
+    url: "https://api.openai.com/v1/moderations"
+    model: "omni-moderation-2024-09-26"
+    timeout: "${MODERATION_TIMEOUT:10s}"
+
 management:
   endpoints:
     web:

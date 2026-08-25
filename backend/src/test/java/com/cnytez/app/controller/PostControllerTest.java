@@ -5,6 +5,7 @@ import com.cnytez.app.dto.request.CreatePostRequest;
 import com.cnytez.app.dto.request.UpdatePostRequest;
 import com.cnytez.app.dto.request.VoteRequest;
 import com.cnytez.app.dto.response.VoteResponse;
+import com.cnytez.app.exception.ContentRejectedException;
 import com.cnytez.app.service.PostService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -80,6 +81,26 @@ class PostControllerTest extends BaseControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.title").value("New Title"));
+    }
+
+    @Test
+    void createPost_rejectedContent_returnsStandardizedError() throws Exception {
+        when(postService.createPost(any(CreatePostRequest.class)))
+                .thenThrow(new ContentRejectedException(
+                        "The post violates the community guidelines."
+                ));
+
+        mockMvc.perform(multipart("/posts")
+                        .param("title", "Rejected title")
+                        .param("content", "Rejected content")
+                        .param("subreddit", "subreddit1")
+                )
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("CONTENT_REJECTED"))
+                .andExpect(jsonPath("$.error.message")
+                        .value("The post violates the community guidelines."))
+                .andExpect(jsonPath("$.path").value("/posts"));
     }
 
     @Test

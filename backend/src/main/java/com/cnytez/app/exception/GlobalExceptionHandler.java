@@ -177,6 +177,20 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ContentRejectedException.class)
+    public ResponseEntity<ApiErrorResponse> handleContentRejected(
+            ContentRejectedException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponse(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                "CONTENT_REJECTED",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<ApiErrorResponse> handleInternalServerError(
             InternalServerErrorException exception,
