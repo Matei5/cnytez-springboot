@@ -107,6 +107,8 @@ Create a `.env` file in the `backend/` directory for local docker execution:
 # backend/.env
 POSTGRES_PASSWORD=your_db_password_here
 JWT_SECRET=your_base64_or_secure_jwt_secret_key_here
+MODERATION_ENABLED=false
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ### Key Environment Variables
@@ -117,6 +119,9 @@ JWT_SECRET=your_base64_or_secure_jwt_secret_key_here
 | `SPRING_DATASOURCE_USERNAME` | PostgreSQL database user | `postgres` |
 | `SPRING_DATASOURCE_PASSWORD` | PostgreSQL database password | `1234` |
 | `JWT_SECRET` | Secret key used for signing & verifying JWT tokens | *(Required)* |
+| `MODERATION_ENABLED` | Enables AI moderation for post creation and editing | `false` |
+| `OPENAI_API_KEY` | Server-side API key used by the moderation client | *(Required only when moderation is enabled)* |
+| `MODERATION_TIMEOUT` | Maximum wait time for the moderation API; failures use the fail-open policy | `2s` |
 | `image-server.url` | Base URL of the .NET image processing service | `http://ec2-18-193-138-107.eu-central-1.compute.amazonaws.com:8123` |
 
 ---

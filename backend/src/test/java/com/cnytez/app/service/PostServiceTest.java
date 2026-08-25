@@ -2,8 +2,12 @@ package com.cnytez.app.service;
 
 import com.cnytez.app.dto.internal.PostDto;
 import com.cnytez.app.exception.ResourceNotFoundException;
+import com.cnytez.app.exception.ContentRejectedException;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.PostMapper;
+import com.cnytez.app.moderation.ContentModerationService;
+import com.cnytez.app.moderation.ModerationResult;
+import com.cnytez.app.moderation.ModerationStatus;
 import com.cnytez.app.model.Post;
 import com.cnytez.app.repository.CommentRepository;
 import com.cnytez.app.repository.FilterRepository;
@@ -43,6 +47,8 @@ class PostServiceTest {
     private CurrentUserService currentUserService;
     @Mock
     private ImageUploadService imageUploadService;
+    @Mock
+    private ContentModerationService contentModerationService;
     @Mock
     private PostMapper postMapper;
 
@@ -153,6 +159,8 @@ class PostServiceTest {
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(subredditRepository.findByName("testsub")).thenReturn(Optional.of(subreddit));
+        when(contentModerationService.moderate("Title", "Content"))
+                .thenReturn(new ModerationResult(ModerationStatus.APPROVED, "Content approved."));
         when(postRepository.save(any(Post.class))).thenReturn(savedPost);
         when(postVoteRepository.countByPostAndVoteType(eq(savedPost), any())).thenReturn(0L);
         when(commentRepository.countByPost(savedPost)).thenReturn(0L);
@@ -168,6 +176,87 @@ class PostServiceTest {
     }
 
     @Test
+    void createPost_rejectedContent_doesNotSavePost() {
+        // arrange
+        com.cnytez.app.dto.request.CreatePostRequest request =
+                new com.cnytez.app.dto.request.CreatePostRequest(
+                        "Rejected title",
+                        "Rejected content",
+                        "testsub",
+                        null,
+                        null
+                );
+        com.cnytez.app.model.User user = com.cnytez.app.model.User.builder()
+                .id(UUID.randomUUID())
+                .username("testuser")
+                .build();
+        com.cnytez.app.model.Subreddit subreddit = com.cnytez.app.model.Subreddit.builder()
+                .id(UUID.randomUUID())
+                .name("testsub")
+                .build();
+
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(subredditRepository.findByName("testsub")).thenReturn(Optional.of(subreddit));
+        when(contentModerationService.moderate("Rejected title", "Rejected content"))
+                .thenReturn(new ModerationResult(ModerationStatus.REJECTED, "violence"));
+
+        // act & assert
+        assertThrows(ContentRejectedException.class, () -> postService.createPost(request));
+        verify(postRepository, never()).save(any(Post.class));
+        verifyNoInteractions(imageUploadService);
+    }
+
+    @Test
+    void createPost_moderationUnavailable_appliesFailOpenPolicy() {
+        // arrange
+        com.cnytez.app.dto.request.CreatePostRequest request =
+                new com.cnytez.app.dto.request.CreatePostRequest(
+                        "Available post",
+                        "Post content",
+                        "testsub",
+                        null,
+                        null
+                );
+        com.cnytez.app.model.User user = com.cnytez.app.model.User.builder()
+                .id(UUID.randomUUID())
+                .username("testuser")
+                .build();
+        com.cnytez.app.model.Subreddit subreddit = com.cnytez.app.model.Subreddit.builder()
+                .id(UUID.randomUUID())
+                .name("testsub")
+                .build();
+        Post savedPost = Post.builder()
+                .id(UUID.randomUUID())
+                .title("Available post")
+                .build();
+        PostDto dto = new PostDto(
+                savedPost.getId(), "Available post", "Post content", null,
+                null, null, null, 0, 0, 0, 0, null, null, null
+        );
+
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(subredditRepository.findByName("testsub")).thenReturn(Optional.of(subreddit));
+        when(contentModerationService.moderate("Available post", "Post content"))
+                .thenReturn(new ModerationResult(
+                        ModerationStatus.UNAVAILABLE,
+                        "The moderation API request failed."
+                ));
+        when(postRepository.save(any(Post.class))).thenReturn(savedPost);
+        when(postVoteRepository.countByPostAndVoteType(eq(savedPost), any())).thenReturn(0L);
+        when(commentRepository.countByPost(savedPost)).thenReturn(0L);
+        when(postMapper.toDto(eq(savedPost), anyLong(), anyLong(), anyLong(), any(), any()))
+                .thenReturn(dto);
+
+        // act
+        PostDto result = postService.createPost(request);
+
+        // assert
+        assertEquals("Available post", result.title());
+        verify(postRepository).save(any(Post.class));
+        verify(logManager).log(contains("fail-open"), eq(com.cnytez.app.logging.LogLevel.WARN));
+    }
+
+    @Test
     void updatePost_success() {
         // arrange
         UUID postId = UUID.randomUUID();
@@ -178,6 +267,8 @@ class PostServiceTest {
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(postRepository.findById(postId)).thenReturn(Optional.of(existingPost));
+        when(contentModerationService.moderate("New Title", "New Content"))
+                .thenReturn(new ModerationResult(ModerationStatus.APPROVED, "Content approved."));
         when(postRepository.save(any(Post.class))).thenReturn(existingPost);
         when(postVoteRepository.countByPostAndVoteType(eq(existingPost), any())).thenReturn(0L);
         when(commentRepository.countByPost(existingPost)).thenReturn(0L);
@@ -189,6 +280,38 @@ class PostServiceTest {
         // assert
         assertNotNull(result);
         verify(postRepository).save(any(Post.class));
+    }
+
+    @Test
+    void updatePost_rejectedContent_doesNotSaveChanges() {
+        // arrange
+        UUID postId = UUID.randomUUID();
+        com.cnytez.app.dto.request.UpdatePostRequest request =
+                new com.cnytez.app.dto.request.UpdatePostRequest(
+                        "Rejected title",
+                        "Rejected content"
+                );
+        com.cnytez.app.model.User user = com.cnytez.app.model.User.builder()
+                .id(UUID.randomUUID())
+                .username("testuser")
+                .build();
+        Post existingPost = Post.builder()
+                .id(postId)
+                .owner(user)
+                .title("Original title")
+                .text("Original content")
+                .build();
+
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(existingPost));
+        when(contentModerationService.moderate("Rejected title", "Rejected content"))
+                .thenReturn(new ModerationResult(ModerationStatus.REJECTED, "harassment"));
+
+        // act & assert
+        assertThrows(ContentRejectedException.class, () -> postService.updatePost(postId, request));
+        assertEquals("Original title", existingPost.getTitle());
+        assertEquals("Original content", existingPost.getText());
+        verify(postRepository, never()).save(any(Post.class));
     }
 
     @Test

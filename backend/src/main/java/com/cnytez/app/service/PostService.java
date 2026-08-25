@@ -9,6 +9,9 @@ import com.cnytez.app.exception.*;
 import com.cnytez.app.logging.LogLevel;
 import com.cnytez.app.logging.LogManager;
 import com.cnytez.app.mapper.PostMapper;
+import com.cnytez.app.moderation.ContentModerationService;
+import com.cnytez.app.moderation.ModerationResult;
+import com.cnytez.app.moderation.ModerationStatus;
 import com.cnytez.app.model.*;
 import com.cnytez.app.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class PostService {
     private final LogManager logManager;
     private final CurrentUserService currentUserService;
     private final ImageUploadService imageUploadService;
+    private final ContentModerationService contentModerationService;
     private final PostMapper postMapper;
 
     public List<PostDto> getAllPosts() {
@@ -86,6 +90,8 @@ public class PostService {
         Subreddit subreddit = subredditRepository.findByName(request.subreddit())
                 .orElseThrow(() -> new ResourceNotFoundException("Subreddit not found with name: " + request.subreddit()));
 
+        moderatePostContent(request.title(), request.content());
+
         String imageUrl = null;
         Filter filter = null;
         if (request.image() != null) {
@@ -133,6 +139,31 @@ public class PostService {
                 getPostFilterId(savedPost));
     }
 
+    private void moderatePostContent(String title, String content) {
+        ModerationResult result = contentModerationService.moderate(
+                title,
+                content
+        );
+
+        if (result.status() == ModerationStatus.REJECTED) {
+            logManager.log(
+                    "Post rejected by content moderation. Categories: " + result.reason(),
+                    LogLevel.WARN
+            );
+            throw new ContentRejectedException(
+                    "The post violates the community guidelines."
+            );
+        }
+
+        if (result.status() == ModerationStatus.UNAVAILABLE) {
+            logManager.log(
+                    "Content moderation unavailable. Applying fail-open policy. Reason: "
+                            + result.reason(),
+                    LogLevel.WARN
+            );
+        }
+    }
+
     @Transactional
     public PostDto updatePost(UUID postId, UpdatePostRequest request) {
         Post post = findPostById(postId);
@@ -147,6 +178,14 @@ public class PostService {
                     "Only the post author can edit this post."
             );
         }
+
+        String moderatedTitle = request.title() == null
+                ? post.getTitle()
+                : request.title();
+        String moderatedContent = request.content() == null
+                ? post.getText()
+                : request.content();
+        moderatePostContent(moderatedTitle, moderatedContent);
 
         if (request.title() != null) {
             post.setTitle(request.title());
